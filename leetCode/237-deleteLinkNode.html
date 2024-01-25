@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * Definition for singly-linked list.
+     * function ListNode(val) {
+     *     this.val = val;
+     *     this.next = null;
+     * }
+     */
+    /**
+     * @param {ListNode} node
+     * @return {void} Do not return anything, modify node in-place instead.
+     */
+    /* 
+    
+      {
+        val: 'a',
+        next: {
+          val: 'b',
+          next: {
+            val: 'c',
+            next: {
+              val: 'd'
+            }
+          }
+        }
+      }
+      给定要删除的节点 b，覆盖法：使得b节点的val为b.next.val即'c'，b节点的next为b.next.next即{ val: 'd' }
+    */
+    var deleteNode = function(node) {
+        node.val = node.next.val;
+        node.next = node.next.next;
+    };
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

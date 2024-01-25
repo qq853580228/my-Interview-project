@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * @param {string} path
+     * @return {string}
+     */
+    // 简化路径
+    var simplifyPath = function(path) {
+        if (!path || path.length < 2) return path;
+        const stack = [];
+        const arr = path.split('/');
+        for(let i = 0; i < arr.length; i++) {
+            item = arr[i];
+            if (item && item !== '.' && item !== '..') {
+                stack.push(item);
+            } else if (stack.length && item === '..') {
+                stack.pop();
+            }
+        }
+        return '/' + stack.join('/');
+    };
+    console.log(simplifyPath('/../')); // '/'
+    console.log(simplifyPath('/home/')); // '/'
+    console.log(simplifyPath('/home//foo/')); // '/home/foo'
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <ul id="ul">
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+    <li>4</li>
+  </ul>
+  <div>
+    <button id="btn">3放到1前面</button>
+  </div>
+</body>
+<script>
+  const btn = document.getElementById('btn');
+  const ul = document.getElementById('ul');
+  const li1 = ul.children[0];
+  let li3 = ul.children[2];
+  li3 = undefined;
+  btn.onclick = function() {
+    ul.insertBefore(li3, li1);
+  }
+</script>
+</html>

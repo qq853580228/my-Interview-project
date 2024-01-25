@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function daffodil(n = 1000) {
+      let ge, shi , bai;
+      for (let i = 100; i < n; i++) {
+        ge = i % 10;
+        shi = parseInt(i / 10) % 10;
+        bai = parseInt(i / 100) % 10;
+        if (ge * ge * ge + shi * shi * shi + bai* bai * bai == i) {
+          console.log(i);
+        }
+      }
+    }
+    daffodil();
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    Function.prototype.bind1 = function () {
+      const args = Array.prototype.slice.call(arguments);
+      const context = args.shift();
+      return () => {
+        return this.apply(context, args);
+      }
+    }
+    function fn(a, b, c) {
+      console.log(this);
+      console.log(a, b, c);
+    }
+    const fn1 = fn.bind1({ x: 100 }, 10, 20, 30);
+    console.log(fn1());
+
+
+    // 手写apply
+    Function.prototype.myApply = function (obj = window, args = []) {
+      obj.fn = this
+      const res = obj.fn(...args)
+      delete obj.fn
+      return res
+    }
+    // 手写call
+    Function.prototype.myCall = function (obj = window, ...args) {
+      obj.fn = this
+      const res = obj.fn(...args)
+      delete obj.fn
+      return res
+    }
+    // fnn.myApply({ name: 'bls' }, [10, 20])
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

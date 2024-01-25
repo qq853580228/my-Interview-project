@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    // 提取参数值
+    function getQueryParams(name) {
+      // const search = location.search.substr(1);
+      const search = 'a=10&b=11&c=12 ';
+      const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`, 'i');
+      const result = search.match(reg);
+      console.log(result);
+      if (result === null) {
+        return;
+      }
+      return decodeURIComponent(result[2]);
+    }
+    console.log('getQueryParams', getQueryParams('a'));
+  </script>
+</head>
+<body>
+    
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    class Subject {
+      constructor() {
+        this.obervers = [];
+      }
+      subscribe(obs) {
+        this.obervers.push(obs);
+      }
+      unsubscribe(obs) {
+        this.obervers = this.obervers.filter(i => i !== obs);
+      }
+      notify(data) {
+        this.obervers.forEach(obs => {
+          obs.update(data);
+        })
+      }
+    }
+    class Observer {
+      constructor(name) {
+        this.name = name
+      }
+      update(data) {
+        console.log(`${this.name}收到的数据：${data}`);
+      }
+    }
+    const obs = new Observer('obs1');
+    const sub = new Subject();
+    sub.subscribe(obs);
+    sub.notify('haha')
+    sub.unsubscribe(obs)
+    sub.notify('hehe')
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

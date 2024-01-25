@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    // 删除字符串中的所有相邻重复项
+    function removeDuplicates(str) {
+      if (str < 2) return str;
+      const stack = [];
+      for (let i = 0; i < str.length; i++) {
+        const prev = stack.pop();
+        const char = str[i];
+        if (!prev) {
+          stack.push(char)
+        } else if (char !== prev) {
+          stack.push(prev);
+          stack.push(char);
+        }
+      }
+      return stack.join('');
+    }
+    console.log(removeDuplicates('abbaca')); // ca
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

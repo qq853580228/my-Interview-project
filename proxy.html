@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    
+    function observer(target) {
+      if (typeof target !== 'object' || target === null) {
+        return target;
+      }
+      const handler = {
+        get(target, key, receiver) {
+          if (Reflect.ownKeys(target, key).includes(key)) {
+            // console.log('get', key);
+          }
+          console.log('get', key);
+          const result = Reflect.get(target, key, receiver);
+          console.log('get result', result);
+          // 深度监听
+          // get哪一层级属性才进行监听, defineProperty 初始化就递归所有层级进行监听
+          return observer(result);
+          // return result;
+        },
+        set(target, key, val, receiver) {
+          // 数据相同不做处理
+          if (val === target[key]) {
+            return true;
+          }
+          console.log('set', key);
+          const result = Reflect.set(target, key, val, receiver);
+          return result; // 是否设置成功
+        },
+        deleteProperty(target, key) {
+          const result = Reflect.deleteProperty(target, key);
+          console.log('deleteProperty', result);
+          return result;
+        },
+      }
+      const observe = new Proxy(target, handler);
+      return observe;
+    };
+
+    const obj = {
+      age: 18,
+      name: 'baolisheng',
+      num: [10, 20, 30],
+      info: {
+        title: 'homesome man',
+        a: {
+          b: {
+            c: 1
+          }
+        }
+      },
+    }
+
+    const proxyObj = observer(obj);
+    proxyObj.info.c = '123'
+    proxyObj.num.push(40);
+    proxyObj.age = 20;
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

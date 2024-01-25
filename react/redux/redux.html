@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script> -->
+  <script src="https://cdn.bootcss.com/redux/4.0.0/redux.js"></script>
+</head>
+<body>
+  <div>
+    <p id="countText">count</p>
+    <button id="addBtn">加1</button>
+    <button id="subBtn">减1</button>
+  </div>
+</body>
+<script>
+  /* 
+    使用redux步骤
+      1、创建reducer整合函数
+      2、通过reducer对象创建store
+      3、对store中的state进行订阅
+      4、通过dispatch派发state的修改命令
+  */
+ 
+ const addBtn = document.getElementById('addBtn');
+ const subBtn = document.getElementById('subBtn');
+ const countText = document.getElementById('countText');
+ 
+ function reducer(state, action) {
+   switch (action.type) {
+     case 'ADD':
+       return state + 1;
+   
+     case 'SUB':
+       return state - 1;
+   
+     default:
+       return state;
+   }
+ }
+  const store = Redux.createStore(reducer, 1);
+
+  store.subscribe(() => {
+    countText.innerHTML = 'count的值为' + store.getState();
+  });
+
+  addBtn.addEventListener('click', () => {
+    store.dispatch({ type: 'ADD' });
+  });
+  subBtn.addEventListener('click', () => {
+    store.dispatch({ type: 'SUB' });  
+  });
+</script>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    var RecentCounter = function() {
+      this.stack = [];
+    };
+
+    /** 
+     * @param {number} t
+     * @return {number}
+     */
+
+    // 最近的请求次数
+
+    RecentCounter.prototype.ping = function(t) {
+      this.stack.push(t);
+      while (this.stack[0] < t - 3000) {
+        this.stack.shift();
+      }
+      return this.stack.length;
+    };
+
+    var obj = new RecentCounter();
+    // console.log(obj.ping(''));
+    console.log(obj.ping(1)); // 1
+    console.log(obj.ping(100)); // 2
+    console.log(obj.ping(3001)); // 3
+    console.log(obj.ping(3002)); // 3
+
+    /**
+     * Your RecentCounter object will be instantiated and called as such:
+     * var obj = new RecentCounter()
+     * var param_1 = obj.ping(t)
+     */
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

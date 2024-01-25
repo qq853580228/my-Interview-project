@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function moveZero(arr = []) {
+      length = arr.length;
+      if (length <= 0) return;
+      let zeroLen = 0;
+      for (let i = 0; i < length - zeroLen; i++) {
+        if (arr[i] === 0) {
+          arr.push(0);
+          arr.splice(i, 1);
+          i --; // 数组截取了第i个元素，i要递减，否则连续0会有问题
+          zeroLen ++; // 累加0的长度
+        }
+      }
+    }
+    function moveZero1(arr = []) {
+      length = arr.length;
+      if (length <= 0) return;
+      let k = 0;
+      for (let i = 0; i < length; i++) {
+        if (arr[i] !== 0) {
+          arr[k++] = arr[i]
+        }
+      }
+      for (let i = k; i < length; i++) {
+        arr[i] = 0;
+      }
+    }
+    function moveZero2(arr = []) {
+      length = arr.length;
+      if (length <= 0) return;
+      let i;
+      let j = -1; // 指向第一个为0的下标
+      for (i = 0; i < length; i++) {
+        if (arr[i] === 0 && j < 0) {
+          j = i;
+        } else if (arr[i] !== 0 && j >= 0) {
+          const temp = arr[i];
+          arr[i] = arr[j];
+          arr[j] = temp;
+          j++;
+        }
+      }
+    }
+    const arr = [1, 0, 0, 5, 0, 2, 6, 0, 1];
+    moveZero2(arr);
+    console.log(arr);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

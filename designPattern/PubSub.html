@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    class PubSub {
+      constructor() {
+        this.subscribers = {}
+      }
+      // 订阅
+      subscribe(type, callback) {
+        if (!this.subscribers[type]) {
+          this.subscribers[type] = [];
+        }
+        this.subscribers[type].push(callback);
+        return () => {
+          this.unsubscribe(type, callback);
+        }
+      }
+      // 取消订阅
+      unsubscribe(type, callback) {
+        if (this.subscribers[type]) {
+          this.subscribers[type] = this.subscribers[type].filter(i => i !== callback);
+        }
+      }
+      // 发布
+      publish(type, data) {
+        this.subscribers[type].forEach(cb => {
+          cb(data);
+        })
+      }
+    }
+    const pub = new PubSub();
+    const subscribe = pub.subscribe('hello', data => {
+      console.log(`subscribe 收到的信息：${data}`)
+    });
+    const subscribe1 = pub.subscribe('hello', data => {
+      console.log(`subscribe1 收到的信息：${data}`)
+    });
+    pub.publish('hello', 'zhangsan');
+    subscribe();
+    pub.publish('hello', 'lisi');
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

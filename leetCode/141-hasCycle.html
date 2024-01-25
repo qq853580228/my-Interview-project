@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * Definition for singly-linked list.
+     * function ListNode(val) {
+     *     this.val = val;
+     *     this.next = null;
+     * }
+     */
+
+    /**
+     * @param {ListNode} head
+     * @return {boolean}
+     */
+
+    /* 
+    
+      定义快慢指针，快指针next为null则没有环，如果快慢指针相遇则有环  
+
+    */
+    var hasCycle = function(head) {
+        if(head == null || head.next == null) {
+            return false
+        }
+        let s = head, f = head.next;
+        while(s !== f) {
+            if(f == null || f.next == null) {
+                return false
+            }
+            s = s.next;
+            f = f.next.next;
+        }
+        return true;
+    };
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

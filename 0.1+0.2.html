@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function dightSum(n1, n2) {
+      const dightArr = [n1, n2].filter(i => i.toString().indexOf('.') > -1);
+      let sum = 0;
+      if (dightArr.length) {
+        const arr = dightArr.map(i => i.toString().split('.')[1].length);
+        const dightLen = Math.max(...arr);
+        const mul = Math.pow(10, dightLen);
+        sum = (n1 * mul + n2 * mul) / mul;
+      } else {
+        sum = n1+ n2;
+      }
+      return sum;
+    }
+    console.log(dightSum(0.1, 0.21));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

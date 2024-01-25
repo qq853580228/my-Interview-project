@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function twoNumbers(arr = [], target) {
+      const length = arr.length;
+      const res = [];
+      if (length === 0) return res;
+      let startIndex = 0;
+      let endIndex = length - 1;
+      while(startIndex < endIndex) {
+        const startVal = arr[startIndex];
+        const endVal = arr[endIndex];
+        const sum = startVal + endVal;
+        // 大于目标值endIndex向前移动
+        if (sum > target) {
+          endIndex--;
+        } else if (sum < target) {
+          // 小于目标值startIndex向后移动
+          startIndex++;
+        } else {
+          // 相等则push 跳出循环
+          res.push(startVal, endVal);
+          break;
+        }
+      }
+      return res;
+    }
+    // 嵌套循环
+    function twoNumbers1(arr = [], target) {
+      const length = arr.length;
+      const res = [];
+      if (length === 0) return res;
+      let flag = false;
+      for (let i = 0; i < length - 1; i++) {
+        const n1 = arr[i];
+        for (let j = i + 1; j < length; j++) {
+          const n2 = arr[j];
+          if (n1 + n2 === target) {
+            flag = true;
+            res.push(n1, n2);
+            break;
+          }
+        }
+        if (flag) break;
+      }
+      return res;
+    }
+    // console.log(twoNumbers([1, 2, 3, 4, 5, 6, 7, 8, 9], 13)); // [4, 9]
+    console.log(twoNumbers1([1, 2, 3, 4, 5, 6, 7, 8, 9], 11)); // [2, 9]
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

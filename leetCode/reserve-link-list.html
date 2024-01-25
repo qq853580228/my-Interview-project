@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    // 根据数组创建单向链表
+    // 单向链表没有pre，只要next
+    function createLinkList(arr = []) {
+      const length = arr.length;
+      if (!arr.length) throw new Error('arr is empty');
+      // 最后一个元素没有next
+      let curNode = {
+        value: arr[length - 1],
+      }
+      for (let i = length - 2; i >= 0; i--) {
+        curNode = {
+          value: arr[i],
+          next: curNode,
+        }
+      }
+      return curNode;
+    }
+    // 反转链表
+    function reserveLinkList(node) {
+      let preNode, curNode, nextNode = node;
+      while (nextNode) {
+        // 第一个元素反转后为最后一个元素，没有next
+        if (curNode && !preNode) {
+          delete curNode.next;
+        }
+        // 反转指针
+        if (curNode && preNode) {
+          curNode.next = preNode;
+        }
+        // 整体往后移动
+        preNode = curNode;
+        curNode = nextNode;
+        nextNode = nextNode.next;
+      }
+      // 当nextNode为空curNode为最后一个指针时，上面循环未执行，需要手动设置curNode.next为上一个指针
+      curNode.next = preNode;
+      return curNode;
+    }
+
+    const list = createLinkList([100, 200, 300, 400]);
+    console.log(reserveLinkList(list));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function deepClone(obj = {}, map = new WeakMap()) {
+      const type = Object.prototype.toString.call(obj);
+      if (typeof obj !== 'object' || obj === null || type === '[object Date]' || type === '[object RegExp]' || type === '[object Function]' || type === '[object Error]') return obj;
+      if (map.get(obj)) return map.get(obj);
+      let result = obj instanceof Array ? [] : {};
+      map.set(obj, result);
+      for (const key in obj) {
+        if (Object.hasOwnProperty.call(obj, key)) {
+          result[key] = deepClone(obj[key], map);
+        }
+      }
+      return result;
+    }
+    const obj = {
+      name: "Jerry",
+      age: 18,
+      other: null,
+      fn: function () {
+        console.log(111);
+      },
+      arr: [],
+      test: {},
+      error: new Error('Test'),
+      sex: undefined,
+      reg: new RegExp(/abc/, ''),
+      date: new Date(),
+      company: Symbol('n/a'),
+    }
+    obj.c = obj;
+    const newObj = deepClone(obj);
+    console.log(obj, newObj);
+  </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

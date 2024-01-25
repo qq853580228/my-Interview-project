@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    class MyQueue {
+      stack1 = [];
+      stack2 = [];
+      add(val) {
+        this.stack1.push(val);
+      }
+      delete() {
+        const { stack1, stack2 } = this;
+        // stack1全部出栈压入stack2
+        while(stack1.length) {
+          const n = stack1.pop();
+          stack2.push(n);
+        }
+        // 相当于stack1队头拿出一个值
+        const res = stack2.pop();
+        // 把stack2的值压入stack1的栈中
+        while(stack2.length) {
+          const n = stack2.pop();
+          stack1.push(n);
+        }
+        return res;
+      }
+      get length() {
+        return this.stack1.length;
+      }
+    }
+    const myQueue = new MyQueue();
+    myQueue.add(1);
+    myQueue.add(2);
+    myQueue.add(3);
+    myQueue.delete();
+    console.log(myQueue);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

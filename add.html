@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function sum(...args) {
+      args.forEach(i => {
+        if (i !== 0 && !i) {
+          throw new Error('请输入数字进行运算');
+        }
+      });
+      const numLenArr = args.map(i => {
+        const index = i.toString().indexOf('.');
+        if (index > -1) {
+          return i.toString().split('.')[1].length;
+        }
+      }).filter(i => i);
+      let sum = 0;
+      if (numLenArr.length) {
+        const max = Math.max(...numLenArr);
+        const times = Math.pow(10, max);
+        sum = args.reduce((pre, cur) => (pre * times + cur * times) / times, 0);
+      } else {
+        sum = args.reduce((pre, cur) => pre + cur, 0);
+      }
+      return sum;
+    }
+    console.log(sum(0.1, 0.2));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

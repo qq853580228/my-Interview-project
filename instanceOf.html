@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function myInstanceOf(obj, constructor) {
+      let impPrototype = Object.getPrototypeOf(obj);
+      const displayPrototype = constructor.prototype;
+      while (impPrototype) {
+        if (impPrototype === displayPrototype) {
+          return true;
+        } else {
+          impPrototype = Object.getPrototypeOf(impPrototype);
+        }
+      }
+      return false;
+    }
+    class Person {
+      constructor(name) {
+        this.name = name;
+      }
+    }
+    const person = new Person('ZHANGSAN');
+    console.log(myInstanceOf(person, Person));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

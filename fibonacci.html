@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+      递归实现 当数字太大时，会变得特别慢，原因是在计算F(9)时需要计算F(8)和F(7)，
+      但是在计算F(8)时要计算F(7)和F(6)，这里面就会重复计算F(7)，每次都重复计算会造成不必要的浪费，所以这种方法并不是很好。
+    **/
+    function fibonacci(n) {
+      if(n <= 0) return 0;
+      if (n === 1) return 1;
+      return arguments.callee(n - 1) + arguments.callee(n - 2);
+    }
+    console.log(fibonacci(6));
+
+    // 使用闭包保存每次的递归值
+    function fibonacci1(n) {
+      if(n <= 0) return 0;
+      const arr = [0 , 1, 1];
+      function fn(v) {
+        if (v < 3) return arr[v];
+        return arr[v] = arguments.callee(v - 1) + arguments.callee(v - 2);
+      }
+      return fn(n);
+    }
+    console.log(fibonacci1(6));
+
+    // 直接使用数组实现（动态规划）
+    function fibonacci2(n) {
+      if (n <= 0) return 0;
+      const arr = [0 , 1, 1];
+      if (n >= 3) {
+        for (let i = 3; i <= n; i++) {
+          arr[i] = arr[i - 1] + arr[i - 2];
+        }
+      }
+      return arr[n];
+    }
+    console.log(fibonacci2(6));
+
+    function fibonacci3(n) {
+      if (n <= 0) return 0;
+      if (n === 1) return 1;
+      let n1 = 1; // 记录n-1的值
+      let n2 = 0; // 记录n-2的值
+      let res = 0;
+      for (let i = 2; i <= n; i++) {
+        res = n1 + n2;
+        n2 = n1;
+        n1 = res;
+      }
+      return res;
+    }
+    console.log(fibonacci3(7));
+    
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

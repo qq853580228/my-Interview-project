@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    let str = "helloWorld";
+
+    // ---------------------------slice----------------------------------
+    // 一个参数，则将字符串长度作为结束位置
+    console.log(str.slice(3)); // "loWorld"
+    // 两个参数，7位置上的字符为"r",但不包括结束位置的字符
+    console.log(str.slice(3, 7)); // "loWo"
+    // 一个参数，与字符串长度相加即为slice(7)
+    console.log(str.slice(-3)); // "rld"
+    // 两个参数，与字符串长度相加即为slice(3,6)
+    console.log(str.slice(3, -4)); // "loW"
+    // slice()方法传入的第二个参数比第一个参数小的话，则返回空字符串
+    console.log(str.slice(5, 3)); // ""
+
+    // ---------------------------substring----------------------------------
+    // 一个参数，则将字符串长度作为结束位置
+    console.log(str.substring(3)); // "loWorld"
+    // 两个参数，7位置上的字符为"r",但不包括结束位置的字符
+    console.log(str.substring(3, 7)); // "loWo"
+    // 两个参数，-4会转换为0，相当于substring(3,0) -->即为 substring(0,3)
+    // substring()方法会将较小的数作为开始位置，将较大的数作为结束位置。所以substring(3,0) 与substring(0,3)是一样效果的
+    console.log(str.substring(3, -4)); // "hel"
+
+    // ---------------------------substr----------------------------------
+    // 一个参数，则将字符串长度作为结束位置
+    console.log(str.substr(3)); // "loWorld"
+    // 两个参数，从位置3开始截取后面7个字符
+    console.log(str.substr(3, 7)); // "loWorld"
+    // 将第一个负的参数加上字符串的长度--->
+    // 即为：substr(7,5) ，从位置7开始向后截取5个字符
+    console.log(str.substr(-3, 5)); // "rld"
+    // 将第二个参数转换为0
+    // 即为：substr(3,0)，即从位置3截取0个字符串，则返回空
+    console.log(str.substr(3, -2)); // ""
+  </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function continuousChar(str = '') {
+      length = str.length;
+      if (length <= 0) return;
+      const res = {
+        char: '',
+        count: 0,
+      }
+      let tempCount = 0; // 临时变量 存储当前连续字符串的长度
+      for (let i = 0; i < length; i++) {
+        tempCount = 0; // 重置
+        for (let j = i; j < length; j++) {
+          if (str[i] === str[j]) {
+            tempCount++;
+          }
+          // 不相等或者j已经为字符串末尾
+          if (str[i] !== str[j] || j === length -1) {
+            if (tempCount > res.count) {
+              res.char = str[i];
+              res.count = tempCount;
+            }
+            if (i < length - 1) {
+              i = j - 1; // j - 1, 校正i 防止j和i错开
+              break;
+            }
+          }
+        }
+      }
+      return res;
+    }
+    function continuousChar1(str = '') {
+      length = str.length;
+      if (length <= 0) return;
+      const res = {
+        char: '',
+        count: 0,
+      }
+      let tempCount = 0; // 临时变量 存储当前连续字符串的长度
+      let i;
+      let j = 0;
+      for (i = 0; i < length; i++) {
+        if (str[i] === str[j]) {
+          tempCount++;
+        }
+        // 不相等或者i已经为字符串末尾
+        if (str[i] !== str[j] || i === length - 1) {
+          if (tempCount > res.count) {
+            res.char = str[j];
+            res.count = tempCount;
+          }
+          tempCount = 0; // 重置
+          if (i < length - 1) {
+            j = i; // j追上i
+            i--; // 校正i 防止j和i错开
+          }
+        }
+      }
+      return res;
+    }
+    console.log('1', continuousChar('aaccab1bccc'));
+    console.log('2', continuousChar1('aaccab1bccc'));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

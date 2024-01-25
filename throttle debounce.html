@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function throttle(fn, delay = 500) {
+      let end = 0;
+      return (...args) => {
+        const now = Date.now();
+        if (now - end >= delay) {
+          fn.apply(this, args);
+          end = now;
+        }
+      }
+    }
+    
+    function debounce(fn, delay = 500) {
+      let timer = null;
+      return (...args) => {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+          fn.apply(this, args);
+          timer = null;
+        }, delay);
+      }
+    }
+    window.onload = function() {
+      const btn = document.getElementById("submit-btn");
+      btn.onclick = debounce(function() {
+        console.log('click');
+      }, 1000)
+    }
+    function getQueryParams(name) {
+      search = location.search;
+      const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`, 'i');
+      const result = search.match(reg);
+      if (result === null) {
+        return;
+      }
+      return decodeURIComponent(result[2]);
+    }
+  </script>
+</head>
+<body>
+  <button id="submit-btn">提交</button>
+</body>
+</html>

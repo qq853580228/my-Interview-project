@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./promise.js"></script>
+  <script>
+    // const p1 = new MyPromise((resolve, reject) => {
+    //   // resolve(100)
+    //   // setTimeout(() => {
+    //   //   resolve(100)
+    //   // }, 500);
+    //   reject('err')
+    // }).then(data => {
+    //   console.log('data1', data);
+    //   return data + 1;
+    // }).then(data => {
+    //   console.log('data2', data);
+    //   return data + 1;
+    // }).catch(err => {
+    //   console.log(err);
+    // });
+    const p1 = new MyPromise((resolve, reject) => {
+      setTimeout(() => {
+        // resolve(100);
+      }, 500);
+    });
+    const p2 = new MyPromise((resolve, reject) => {
+      // resolve(101);
+    });
+    const p3 = new MyPromise((resolve, reject) => {
+      reject('err');
+    });
+    // MyPromise.resolve(1).then(data => { console.log(data) });
+    // MyPromise.reject(2).catch(data => { console.log(data) });
+    MyPromise.all([p1, p2, p3]).then(res => console.log(res));
+    MyPromise.race([p1, p2, p3]).then(res => console.log(res));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

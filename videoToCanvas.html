@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取视频封面</title>
+
+    <style>
+        .preview {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slider {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: rgba(255, 255, 255, .8);
+            width: 15px;
+            height: 100%;
+            cursor: pointer;
+            z-index: 99;
+        }
+
+        .get-offset-area {
+            position: absolute;
+            inset: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <input type="file">
+    </div>
+    <div>
+        <button class="download">下载</button>
+    </div>
+    <video></video>
+    <div class="preview">
+        <span class="slider"></span>
+        <div class="picArea">
+            <div class="get-offset-area"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // DOM
+        const inp = document.querySelector('input'),
+            preview = document.querySelector('.preview'), // 预览小图区域
+            slider = document.querySelector('.slider'),   // 滑块
+            picArea = preview.querySelector('.picArea'),  // 每张小图容器
+            getOffsetArea = preview.querySelector('.get-offset-area'),  // 每张小图容器
+            video = document.querySelector('video'),
+            download = document.querySelector('.download')
+
+        // 尺寸
+        const sliderWidth = getStyle(slider, 'width')
+
+        // 每张预览图信息
+        let picArr = [],
+            isFirst = true,
+            sliderX = 0,        // 鼠标移动时 滑块相对预览容器坐标
+            realSilderX = 0,    // 当预览图过多 超过范围时 需要移动`picArea` 这时位置不准 需要额外的定位坐标
+            perPicsWidth = 0,   // 每张小图大小
+            selectedIndex = 0,  // 选中的预览图数组索引
+            picsWidth = 0,      // 预览小图容器宽度
+            maxPicsOffsetLeft = 0   // 预览小图最大偏移值 
+
+        // 配置
+        let VIDEO_HEIGHT = 0
+        const VIDEO_WIDTH = 500,
+            RATIO = 5  // 缩放比例
+
+
+        init()
+
+
+        function init() {
+            preview.style.width = VIDEO_WIDTH + 'px'
+            bindEvent()
+        }
+
+        function bindEvent() {
+            // 给视频添加选择的文件 并生成预览条
+            inp.onchange = function () {
+                const file = this.files[0]
+
+                video.src = URL.createObjectURL(file)
+                video.oncanplay = async () => {
+                    video.style.width = VIDEO_WIDTH + 'px'
+                    // 宽 / 原始宽 = 比例;   比例 * 原始高度 = 最终高度
+                    VIDEO_HEIGHT = VIDEO_WIDTH / video.videoWidth * video.videoHeight
+
+                    if (isFirst) {
+                        isFirst = false
+                        picArr = await captureFrame(file, [1, 2, 3, 4, 5, 6, 7])
+
+                        // 设置小图容器宽度
+                        picsWidth = picArr.length * VIDEO_WIDTH / RATIO
+                        picArea.style.width = picsWidth + 'px'
+
+                        maxPicsOffsetLeft = picsWidth - VIDEO_WIDTH
+                    }
+                }
+            }
+
+            download.onclick = function () {
+                const url = picArr[selectedIndex].url,
+                    a = document.createElement('a')
+
+                a.href = url
+                a.download = Date.now()
+                a.click()
+            }
+
+            slider.addEventListener('mousedown', (e) => {
+                e.preventDefault()  // 防止鼠标移不动
+                setSliderPos(e)
+
+                // 使用`mouseover`是因为需要冒泡到`getOffsetArea` 获取他的相对坐标
+                window.addEventListener('mouseover', onMouseOver)
+                window.addEventListener('mouseup', onMouseUp)
+                getOffsetArea.addEventListener('mouseover', onGetOffsetAreaMouseOver)
+            })
+        }
+
+
+        /**
+         * 生成视频某秒图片 大于总时长则用最后一秒
+         * @param {File} file 
+         * @param {number | number[]} timeOrArray 
+         */
+        async function captureFrame(file, timeOrArray) {
+            if (typeof timeOrArray === 'number') {
+                return await genFrame(timeOrArray)
+            }
+            else {
+                const arr = []
+                timeOrArray.forEach((t) => {
+                    arr.push(genFrame(t))
+                })
+                return Promise.all(arr)
+            }
+
+            // 生成指定秒画面
+            async function genFrame(time) {
+                const vdo = document.createElement('video'),
+                    src = url = URL.createObjectURL(file)
+
+                vdo.currentTime = time
+                vdo.muted = true
+                vdo.autoplay = true
+                vdo.src = src
+
+                return new Promise((resolve, reject) => {
+                    vdo.oncanplay = () => {
+                        resolve(videoToCanvas(vdo))
+                    }
+                    vdo.onerror = (err) => {
+                        reject(err)
+                    }
+                })
+            }
+        }
+
+        /**
+         * 根据视频文件 生成对应时间的封面
+         */
+        function videoToCanvas(vdo) {
+            const cvs = document.createElement('canvas'),
+                ctx = cvs.getContext('2d'),
+                { videoWidth, videoHeight } = vdo,
+                w = VIDEO_WIDTH / RATIO,
+                h = VIDEO_HEIGHT / RATIO
+
+            // 每张小图宽度
+            perPicsWidth = w
+            cvs.height = h
+            cvs.width = w
+
+            // 生成预览小图
+            ctx.drawImage(vdo, 0, 0, w, h)
+            picArea.appendChild(cvs)
+            // 预览图高度设置一致
+            picArea.style.height = h + 'px'
+
+            // 存入原图
+            const oriCvs = document.createElement('canvas'),
+                orictx = oriCvs.getContext('2d')
+
+            oriCvs.height = vdo.videoHeight
+            oriCvs.width = vdo.videoWidth
+            orictx.drawImage(vdo, 0, 0)
+            return new Promise((resolve) => {
+                oriCvs.toBlob(blob => resolve({
+                    blob,
+                    url: URL.createObjectURL(blob)
+                }))
+            })
+        }
+
+
+        // 事件函数
+        function onMouseOver(e) {
+            setSliderPos(e)
+
+            selectedIndex = Math.floor(realSilderX / perPicsWidth)
+            if (selectedIndex >= picArr.length - 1) {
+                selectedIndex = picArr.length - 1
+            }
+            else if (selectedIndex === -0 || selectedIndex <= 0) {
+                selectedIndex = 0
+            }
+            console.log({ realSilderX, perPicsWidth, selectedIndex })
+            // 视频从第一秒开始 索引从0开始
+            video.currentTime = selectedIndex + 1
+        }
+
+        function onMouseUp() {
+            window.removeEventListener('mouseover', onMouseOver)
+            window.removeEventListener('mouseup', onMouseUp)
+            getOffsetArea.removeEventListener('mouseover', onGetOffsetAreaMouseOver)
+        }
+
+        function onGetOffsetAreaMouseOver(e) {
+            realSilderX = e.offsetX
+            console.log(realSilderX)
+        }
+
+
+        // 工具 
+        function setSliderPos(e) {
+            const { left } = preview.getBoundingClientRect()
+            sliderX = e.clientX - left
+            const x = sliderX - sliderWidth / 2   // 居中
+
+            if (!canMove()) return
+            movePicArea()
+
+            slider.style.transform = `translateX(${x}px)`
+
+
+            function canMove() {
+                if (x > 0 && x < VIDEO_WIDTH - sliderWidth) {
+                    return true
+                }
+            }
+
+            function movePicArea() {
+                const threshold = VIDEO_WIDTH / 2
+                if (x > threshold) {
+                    let offsetLeft = x - threshold
+                    offsetLeft >= maxPicsOffsetLeft && (offsetLeft = maxPicsOffsetLeft)
+                    picArea.style.transform = `translateX(${-offsetLeft}px)`
+                }
+            }
+        }
+
+        function getStyle(el, attr) {
+            let res = getComputedStyle(el)[attr]
+            res.endsWith('px') && (res = parseInt(res))
+            return res
+        }
+    </script>
+</body>
+
+</html>

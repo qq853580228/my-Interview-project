@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <style>
+    .container {
+      /* 包含块的边框 */
+      border: 2px solid black;
+      overflow: hidden;
+      /* 创建 BFC */
+    }
+
+    .child {
+      margin: 20px;
+      /* 子元素的外边距 */
+      padding: 10px;
+      /* 子元素的内边距 */
+      background-color: lightgray;
+    }
+    .p1 {
+      float: left;
+      width: 100px;
+      height: 100px;
+      background: rebeccapurple;
+    }
+    .p2 {
+      display: inline-block;
+      width: 50%;
+      height: 50px;
+      background: darkcyan;
+    }
+  </style>
+  <script>
+    function timeout(ms) {
+      return new Promise((resolve, reject) => {
+        setTimeout(resolve, ms, 'done');
+      });
+    }
+    
+    timeout(100).then((value) => {
+      console.log(value);
+    });
+  </script>
+</head>
+
+<body>
+  <div>123</div>
+  <div class="container">
+    <div class="child">Child Element</div>
+  </div>
+  <div class="parent">
+    <div class="p1"></div>
+    <span class="p2"></span>
+  </div>
+</body>
+
+</html>

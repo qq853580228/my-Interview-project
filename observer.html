@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    
+    function viewUpdate() {
+      console.log(`更新了`);
+    }
+
+    const oldArrProto = Array.prototype;
+    const arrProto = Object.create(oldArrProto);
+    ['push', 'slice', 'splice', 'pop', 'shift', 'unshift'].forEach(methodName => {
+      arrProto[methodName] = function() {
+        viewUpdate();
+        oldArrProto[methodName].call(this, ...arguments);
+      }
+    });
+
+    function observer(target) {
+      if (typeof target !== 'object' || target === null) {
+        return target;
+      }
+      if (Array.isArray(target)) {
+        target.__proto__ = arrProto;
+      }
+      for (const key in target) {
+        if (Object.hasOwnProperty.call(target, key)) {
+          defineReative(target, key, target[key]);
+        }
+      }
+    }
+    function defineReative(target, key, value) {
+      observer(value);
+      Object.defineProperty(target, key, {
+        get() {
+          // console.log('访问了' + key);
+          return value;
+        },
+        set(val) {
+          if (val !== value) {
+            // 深度监听
+            observer(val);
+            value = val;
+            viewUpdate();
+          }
+        },
+      });
+    }
+    
+    const obj = {
+      name: 'bls',
+      age: 18,
+      info: {
+        title: 'homesome'
+      },
+      num: [10, 20, 30],
+    };
+    observer(obj);
+    const arr = [1, 2, 3];
+    observer(arr);
+    arr.push(4)
+    // obj.age = 20;
+    // obj.info.title = 'homesomeest';
+    // obj.num.push(40);
+    // obj.info.city = 'xiamen';
+    // console.log(obj);
+    console.log(arr);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

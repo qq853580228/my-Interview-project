@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+
+    const arr = [];
+
+    function preOrderTraverse(node) {
+      if (node == null) return;
+      // console.log(node.value);
+      arr.push(node.value);
+      preOrderTraverse(node.left);
+      preOrderTraverse(node.right);
+    }
+    function inOrderTraverse(node) {
+      if (node == null) return;
+      inOrderTraverse(node.left);
+      // console.log(node.value);
+      arr.push(node.value);
+      inOrderTraverse(node.right);
+    }
+    function postOrderTraverse(node) {
+      if (node == null) return;
+      postOrderTraverse(node.left);
+      postOrderTraverse(node.right);
+      // console.log(node.value);
+      arr.push(node.value);
+    }
+    function getKValue(node, k) {
+      inOrderTraverse(node)
+      return arr[k - 1];
+    }
+    /* 
+      前序遍历：中（根节点在前）左右
+      中序遍历：左中右
+      后序遍历：左右中
+      二叉搜索树的特点：左叶子节点的值比根节点小 右叶子节点的值比根节点大
+      利用中序遍历 结果就是从小到大有序递增的数组 第k小值就是arr[k - 1]的值
+    */
+    const bst = {
+      value: 5,
+      left: {
+        value: 3,
+        left: {
+          value: 2,
+          left: null,
+          right: null,
+        },
+        right: {
+          value: 4,
+          left: null,
+          right: null,
+        },
+      },
+      right: {
+        value: 7,
+        left: {
+          value: 6,
+          left: null,
+          right: null,
+        },
+        right: {
+          value: 8,
+          left: null,
+          right: null,
+        },
+      },
+    }
+    console.log(getKValue(bst, 1)); // 4
+    // inOrderTraverse(bst);
+    // postOrderTraverse(bst);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

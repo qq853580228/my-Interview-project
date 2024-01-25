@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function reverseTree(root) {
+      if (typeof root !== 'object' || root == null) {
+        return;
+      }
+      [root.left, root.right] = [root.right, root.left];
+      reverseTree(root.left);
+      reverseTree(root.right);
+      return root;
+    }
+    const root = reverseTree({
+      value: '1',
+      left: {
+        value: '1-1',
+        left : {
+          left: '1-1-1',
+        },
+        right: {
+          left: '1-1-2',
+        },
+      },
+      right: {
+        value: '1-2',
+        left : {
+          value: '1-2-1',
+        },
+        right: {
+          value: '1-2-2', 
+        },  
+      }
+    })
+    console.log(root);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

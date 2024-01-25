@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .box {
+      width: 50px;
+      height: 50px;
+      visibility: hidden;
+    }
+
+    .box1 {
+      width: 100px;
+      height: 100px;
+      border: 1px solid;
+    }
+
+    .box-c {
+      width: 30px;
+      height: 30px;
+      border: 1px solid;
+      visibility: initial;
+    }
+  </style>
+  <script>
+    // key为数组下标时
+    // let obj = {
+    //   0: 1,
+    //   1: 2,
+    //   2: 3,
+    //   length: 3,
+    // }
+    // obj = Array.from(obj);
+    // for (const value of obj) {
+    //   console.log(value);
+    // }
+    // const obj = {
+    //   a: 1,
+    //   b: 2,
+    //   c: 'c',
+    // }
+    // obj[Symbol.iterator] = function () {
+    //   const keys = Object.keys(this);
+    //   let count = 0;
+    //   return {
+    //     next() {
+    //       if (count < keys.length) {
+    //         return { value: obj[keys[count++]], done: false };
+    //       } else {
+    //         return { value: undefined, done: true };
+    //       }
+    //     }
+    //   }
+    // }
+    // for (const value of obj) {
+    //   console.log(value);
+    // }
+    const obj = {
+      a: 4,
+      b: 5,
+      c: 6,
+    }
+    obj[Symbol.iterator] = function* () {
+      for (const key in obj) {
+        if (Object.hasOwnProperty.call(obj, key)) {
+          yield obj[key]
+        }
+      }
+    }
+    console.log(obj);
+    for (const value of obj) {
+      console.log(value);
+    }
+
+    const wmap = new WeakMap();
+    function fn() {
+      const obj = { name: 'zhangsan' };
+      wmap.set(obj, 'map set');
+    }
+    // fn()
+
+    console.log(1);
+    setTimeout(() => {
+      console.log(2);
+    }, 11);
+    setTimeout(() => {
+      console.log(3);
+    }, 10);
+    console.log(4);
+    
+    async function fn() {
+      console.log('111');
+      await sleep(1000);
+      console.log('333');
+    }
+    fn();
+    function sleep(time) {
+      return new Promise(resolve => {
+        setTimeout(resolve, time);
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <div class="box">
+    <div class="box-c"></div>
+  </div>
+  <div class="box1">
+
+  </div>
+</body>
+
+</html>
