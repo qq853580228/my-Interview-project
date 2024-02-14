@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function sum(a, b, c) {
+      return a + b + c;
+    }
+    function curry(fn) {
+      const fnArgLen = fn.length;
+      let args = [];
+      function calc(...newArgs) {
+        args = [...args, ...newArgs]; // 积累参数
+        if (args.length < fnArgLen) {
+          // 参数不够 返回函数
+          return calc;
+        } else {
+          return fn.apply(this, args.slice(0, fnArgLen));
+        }
+      }
+      return calc;
+    }
+    const curryAdd = curry(sum);
+    // const res = curryAdd(10)(20)(30) // 60
+    // const res = curryAdd(10, 20, 30) // 60
+    // const res = curryAdd(10, 20)(30) // 60
+    const res = curryAdd(10)(20, 30) // 60
+    console.log(res);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

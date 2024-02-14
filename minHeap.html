@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /* 
+      1.堆是一棵完全二叉树（二叉树一般采用链表的形式实现，二叉堆一般采用数组的形式实现）
+        完全二叉树是指除了最后一层其它层都达到最大节点数，且最后一层节点都靠左排列。
+
+      2.堆中某个节点的值总是不大于（不小于）其父节点的值。
+
+      3.满二叉树
+        满二叉树是指所有层都达到最大节点数的二叉树。
+    */
+    class MinHeap {
+      constructor() {
+        this.heap = [];
+      }
+      insert(value) {
+        this.heap.push(value);
+        this.up(this.heap.length - 1); // 新增元素的下标
+      }
+      /* 删除节点，一般是删除根节点。和插入操作一样，由于要保证二叉堆完全二叉树的特性，
+      在删除根节点后，将二叉堆的最后一个元素替换到根节点上。 */
+      delete() {
+        this.heap[0] = this.heap.pop();
+        this.down(0);
+      }
+      getPeek() {
+        return this.heap[0];
+      }
+      get length() {
+        return this.heap.length;
+      }
+      // 上(前)移操作
+      up(index) {
+        if (index === 0) return;
+        const patientIndex = this.getPatientIndex(index);
+        if (this.heap[patientIndex] > this.heap[index]) {
+          this.swap(patientIndex, index);
+          this.up(patientIndex);
+        }
+      }
+      // 下(后)移操作
+      down(index) {
+        const leftIndex = this.getLeftIndex(index);
+        const rightIndex = this.getRightIndex(index);
+        if (this.heap[index] > this.heap[leftIndex]) {
+          this.swap(index, leftIndex);
+          this.down(index);
+        }
+        if (this.heap[index] > this.heap[rightIndex]) {
+          this.swap(index, rightIndex);
+          this.down(index);
+        }
+      }
+      // 交换位置
+      swap(i1, i2) {
+        const temp = this.heap[i1];
+        this.heap[i1] = this.heap[i2];
+        this.heap[i2] = temp;
+      }
+      // 获取根节点下标 Math.floor((index - 1) / 2)
+      getPatientIndex(index) {
+        return Math.floor((index - 1) / 2);
+      }
+      // 获取左叶子节点下标 (父节点index * 2 + 1)
+      getLeftIndex(index) {
+        return index * 2 + 1;
+      }
+      // 获取右叶子节点下标 (父节点index * 2 + 2)
+      getRightIndex(index) {
+        return index * 2 + 2;
+      }
+    }
+    const minHeap = new MinHeap();
+    minHeap.insert(5);
+    minHeap.insert(4);
+    minHeap.insert(6);
+    minHeap.insert(1);
+    minHeap.delete();
+    console.log('getPeek', minHeap.getPeek());
+    console.log('length', minHeap.length);
+    console.log(minHeap.heap);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

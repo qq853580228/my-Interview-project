@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * Definition for a binary tree node.
+     * function TreeNode(val, left, right) {
+     *     this.val = (val===undefined ? 0 : val)
+     *     this.left = (left===undefined ? null : left)
+     *     this.right = (right===undefined ? null : right)
+     * }
+     */
+    /**
+     * @param {TreeNode} root
+     * @return {number[]}
+     */
+    // 中序遍历 左中右
+    var inorderTraversal = function(root) {
+      // const result = [];
+      // function fn(node) {
+      //   if (node == null) return;
+      //   fn(node.left);
+      //   result.push(node.val);
+      //   fn(node.right);
+      // }
+      // fn(root);
+      // return result;
+      const result = [];
+      if (root == null) return result;
+      const stacks = [];
+      let o = root;
+      while(stacks.length || o) {
+        while(o) {
+          stacks.push(o);
+          o = o.left;
+        }
+        const curNode = stacks.pop();
+        result.push(curNode.val);
+        o = curNode.right;
+      }
+      return result;
+    };
+    inorderTraversal({
+      val: 1,
+      left: {
+        val: 2,
+        left: {
+          val: 3,
+          left: null,
+          right: null,
+        },
+        right: {
+          val: 4,
+          left: null,
+          right: null,
+        },
+      },
+      right: {
+        val: 5,
+        left: null,
+        right: null,
+      },
+    })
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

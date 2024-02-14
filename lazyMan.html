@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<script>
+		class LazyMan {
+			name = ''
+			tasks = []
+			constructor(name) {
+				this.name = name;
+				setTimeout(() => {
+					this.next();
+				});
+			}
+			next() {
+				const task = this.tasks.shift(); // 取出task第一个任务
+				if (task) task();
+			}
+			eat(food) {
+				const task = () => {
+					console.info(`${this.name} is eating ${food}`);
+					this.next();
+				}
+				this.tasks.push(task);
+				return this;
+			}
+			sleep(seconds) {
+				const task = () => {
+					setTimeout(() => {
+						console.info(`sleep ${seconds}s`);
+						this.next();
+					}, seconds * 1000);
+				}
+				this.tasks.push(task);
+				return this;
+			}
+		}
+		const lazyMan = new LazyMan('bls');
+		lazyMan.eat('芭乐').eat('火龙果').sleep(2).eat('苹果');
+	</script>
+</head>
+<body>
+	
+</body>
+</html>

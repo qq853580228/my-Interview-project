@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * @param {number[]} nums
+     * @param {number} target
+     * @return {number[]}
+     */
+    // 两数和为目标值 且不能重复 返回下标
+    var twoSum = function(nums, target) {
+      const map = new Map();
+      for (let i = 0; i < nums.length; i++) {
+        const val = nums[i];
+        const num = target - val;
+        if (map.has(num)) {
+          return [map.get(num), i];
+        }
+        map.set(val, i);
+      }
+      return -1;
+    };
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

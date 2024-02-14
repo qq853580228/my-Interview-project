@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * @param {number[]} nums
+     * @return {boolean}
+     */
+    // 是否存在重复元素
+    var containsDuplicate = function(nums) {
+      const map = new Map();
+      for (let i = 0; i < nums.length; i++) {
+        const val = nums[i];
+        if (map.has(val)) {
+          return true;
+        } else {
+          map.set(val, val);
+        }
+      }
+      return false;
+    };
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

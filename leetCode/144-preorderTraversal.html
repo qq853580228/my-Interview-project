@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * Definition for a binary tree node.
+     * function TreeNode(val, left, right) {
+     *     this.val = (val===undefined ? 0 : val)
+     *     this.left = (left===undefined ? null : left)
+     *     this.right = (right===undefined ? null : right)
+     * }
+     */
+    /**
+     * @param {TreeNode} root
+     * @return {number[]}
+     */
+    // 前序遍历 & 先序遍历 中左右
+    var preorderTraversal = function(root) {
+      // const result = [];
+      // function fn(node) {
+      //   if (node == null) return;
+      //   result.push(node.val);
+      //   fn(node.left);
+      //   fn(node.right);
+      // }
+      // fn(root);
+      // return result;
+      const result = [];
+      if (root == null) return result;
+      const stacks = [];
+      stacks.push(root);
+      while(stacks.length) {
+        const curNode = stacks.pop();
+        result.push(curNode.val);
+        if (curNode.right) stacks.push(curNode.right);
+        if (curNode.left) stacks.push(curNode.left);
+      }
+      return result;
+    };
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    // class LRUCache {
+    //   constructor(length) {
+    //     this.maxLen = length;
+    //     this.map = new Map();
+    //   }
+    //   get(key) {
+    //     const { map } = this;
+    //     if (map.has(key)) {
+    //       const val = map.get(key);
+    //       map.delete(key);
+    //       map.set(key, val);
+    //       return val;
+    //     }
+    //     return null;
+    //   }
+    //   set(key, val) {
+    //     const { map } = this;
+    //     if (map.has(key)) {
+    //       map.delete(key);
+    //     }
+    //     map.set(key, val);
+    //     // 超出最大长度需要删除第一个
+    //     if (map.size > this.maxLen) {
+    //       const firstKey = map.keys().next().value;
+    //       map.delete(firstKey);
+    //     }
+    //   }
+    // }
+    class LRUCache {
+      constructor(length) {
+        this.maxLen = length;
+        this.data = {};
+        this.dataLen = 0;
+        this.head = null;
+        this.tail = null;
+      }
+      get(key) {
+        const { data, tail } = this;
+        const curNode = data[key];
+        if (curNode == null) return null;
+        // 本来就在末尾（最新鲜的位置）则直接返回
+        if (curNode === tail) return curNode.value;
+        
+        // 移动到末尾
+        this.moveToTail(curNode);
+        return curNode.value;
+      }
+      set(key, value) {
+        const { data, tail } = this;
+        const curNode = data[key];
+        if (curNode == null) {
+          // 新增数据
+          const newNode = { key, value };
+          // 移动到末尾
+          this.moveToTail(newNode);
+
+          data[key] = newNode;
+          this.dataLen++;
+          if (this.dataLen === 1) {
+            this.head = newNode;
+          }
+        } else {
+          // 现有数据
+          // 修改现有数据
+          curNode.value = value;
+          // 移动到末尾
+          this.moveToTail(curNode);
+        }
+
+        // 尝试清理长度
+        this.tryClear();
+      }
+      moveToTail(curNode) {
+        const tail = this.tail;
+        // 当前节点处于末尾 直接返回
+        if (tail === curNode) return;
+
+        const prevNode = curNode.prev;
+        const nextNode = curNode.next;
+        /*  1、断绝prevNode nextNode 和当前节点的关系  */
+        if (prevNode) {
+          if (nextNode) {
+            prevNode.next = nextNode;
+          } else {
+            delete prevNode.next;
+          }
+        }
+        if (nextNode) {
+          if (prevNode) {
+            nextNode.prev = prevNode;
+          } else {
+            delete nextNode.prev;
+          }
+        }
+        /*  2、当前节点断绝和 prevNode nextNode 的关系  */
+        delete curNode.prev;
+        delete curNode.next;
+        /*  3、在list末尾重新建立 当前节点的关系  */
+        if (tail) {
+          tail.next = curNode;
+          curNode.prev = tail;
+        }
+        this.tail = curNode;
+      }
+      tryClear() {
+        while(this.dataLen > this.maxLen) {
+          const head = this.head;
+          if (head == null) throw new Error('head is null');
+          const headNext = head.next;
+          if (headNext == null) throw new Error('headNext is null');
+          headNext.prev = null;
+          /* 1、断绝head和next 的关系 */
+          delete head.next;
+          delete headNext.prev;
+          /* 2、重新赋值 head */
+          this.head = headNext;
+          /* 3、清理data 重新计数 */
+          delete this.data[head.key]
+          this.dataLen--;
+        }
+      }
+    }
+    const lruCache = new LRUCache(2);
+    lruCache.set(1, 1);
+    console.log(lruCache.get(1));
+    lruCache.set(2, 2);
+    console.log(lruCache.get(2));
+    lruCache.set(3, 3);
+    console.log(lruCache.get(1));
+    console.log(lruCache.get(3));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * Definition for a binary tree node.
+     * function TreeNode(val, left, right) {
+     *     this.val = (val===undefined ? 0 : val)
+     *     this.left = (left===undefined ? null : left)
+     *     this.right = (right===undefined ? null : right)
+     * }
+     */
+    /**
+     * @param {TreeNode} root
+     * @return {number}
+     */
+    /* 
+      给定一个二叉树，找出其最小深度。
+      最小深度是从根节点到最近叶子节点的最短路径上的节点数量。
+      说明：叶子节点是指没有子节点的节点。
+
+      思路：深度优先遍历左右子树，分解成子问题，树的最小深度等于左右子树最小深度+1
+      复杂度分析：时间复杂度O(n), 其中 n 为二叉树节点的个数。空间复杂度O(n), 其中n 表示二叉树的高度，
+      最坏的情况下树呈现链状，和树的节点数相同，平均情况下树的高度与节点数的对数正相关，空间复杂度为 O(logn)
+    */
+    var minDepth = function(root) {
+      // if (!root) return 0;
+      // const stacks = [[root, 1]];
+      // while(stacks.length) {
+      //   const [curNode, n] = stacks.shift();
+      //   if (!curNode.left && !curNode.right) {
+      //     return n;
+      //   }
+      //   if (curNode.left) stacks.push([curNode.left, n + 1]);
+      //   if (curNode.right) stacks.push([curNode.right, n + 1]);
+      // }
+      if (!root) return 0;
+      if (!root.left && !root.right) return 1;
+      let res = Number.MAX_SAFE_INTEGER;
+      if (root.left) {
+        res = Math.min(minDepth(root.left), res); // 递归左子树，找到左子树的最小深度
+      }
+      if (root.right) {
+        res = Math.min(minDepth(root.right), res);// 递归右子树，找到右子树的最小深度
+      }
+      return res + 1;
+    };
+    console.log(minDepth({
+      val: 1,
+      left: {
+        val: 2,
+        left: {
+          val: 3,
+          left: null,
+          right: null,
+        },
+        right: {
+          val: 4,
+          left: null,
+          right: null,
+        },
+      },
+      right: {
+        val: 5,
+        left: null,
+        right: null,
+      },
+    }));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

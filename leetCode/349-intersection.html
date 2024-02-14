@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /**
+     * @param {number[]} nums1
+     * @param {number[]} nums2
+     * @return {number[]}
+     */
+    // 两个数组的交集
+    var intersection = function(nums1, nums2) {
+      const result = new Set();
+      for (let i = 0; i < nums1.length; i++) {
+        const num1 = nums1[i];
+        if (nums2.includes(num1)) {
+          result.add(num1);
+        }
+      }
+      return [...result];
+
+      // const result = [...new Set(nums1)];
+      // return result.filter(i => new Set(nums2).has(i));
+    };
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

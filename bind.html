@@ -6,17 +6,20 @@
   <title>Document</title>
   <script>
     Function.prototype.bind1 = function () {
-      const args = Array.prototype.slice.call(arguments);
-      const context = args.shift();
-      return () => {
-        return this.apply(context, args);
+      const bindArgs = Array.prototype.slice.call(arguments);
+      const context = bindArgs.shift();
+      const self = this;
+      return function(...args) {
+        // 拼接参数
+        const newArgs = bindArgs.concat(args)
+        return self.apply(context, newArgs);
       }
     }
     function fn(a, b, c) {
       console.log(this);
       console.log(a, b, c);
     }
-    const fn1 = fn.bind1({ x: 100 }, 10, 20, 30);
+    const fn1 = fn.bind1({ x: 100 }, 10);
     console.log(fn1());
 
 
@@ -36,8 +39,37 @@
     }
     // fnn.myApply({ name: 'bls' }, [10, 20])
   </script>
+  <style>
+    .box {
+      width: 0;
+      height: 0;
+      border: 30px solid transparent;
+      border-top-color:  red;
+    }
+    .c {
+      overflow: hidden;
+    }
+    .c1 {
+      float: left;
+      width: 100px;
+      height: 100px;
+      background: red;
+    }
+    .c2 {
+      /* display: inline-block; */
+      width: 200px;
+      height: 200px;
+      background: blue;
+    }
+  </style>
 </head>
 <body>
-  
+  <!-- <div class="box"></div> -->
+  <div class="box1">
+    <div class="c">
+      <div class="c1"></div>
+    </div>
+    <div class="c2"></div>
+  </div>
 </body>
 </html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    class EventBus {
+      constructor() {
+        this.events = {};
+      }
+      on(type, fn, isOnce = false) {
+        if (!this.events[type]) {
+          this.events[type] = [];
+        }
+        this.events[type].push({ fn, isOnce });
+      }
+      once(type, fn) {
+        this.on(type, fn, true);
+      }
+      off(type, fn) {
+        if (!fn) {
+          this.events[type] = [];
+        } else {
+          this.events[type] = this.events[type].filter(i => i.fn !== fn);
+        }
+      }
+      emit(type, ...args) {
+        if (this.events[type]) {
+          this.events[type] = this.events[type].filter(({ fn, isOnce }) => {
+            fn(...args);
+            return !isOnce;
+          });
+        }
+      }
+    }
+    function fn1(a, b) {
+      console.info('fn1', a, b);
+    }
+    function fn2(a, b) {
+      console.info('fn2', a, b);
+    }
+    function fn3(a, b) {
+      console.info('fn3', a, b);
+    }
+    const eb = new EventBus();
+    eb.on('key1', fn1);
+    eb.on('key1', fn2);
+    eb.once('key2', fn3);
+
+    eb.emit('key1', 10, 20);
+    eb.emit('key2', 10, 20);
+
+    eb.off('key1', fn1);
+
+    eb.emit('key1', 100, 200);
+    eb.emit('key2', 100, 200);
+    </script>
+</head>
+<body>
+  
+</body>
+</html>

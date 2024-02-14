@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    // 数组转树
+    // function convert(arr = []) {
+    //   const treeToNode = new Map();
+    //   let root = null;
+    //   arr.forEach(item => {
+    //     const { id, name, patientId } = item;
+    //     const treeNode = { id, name };
+    //     treeToNode.set(id, treeNode);
+        
+    //     // 获取父节点
+    //     const patientNode = treeToNode.get(patientId);
+    //     if (patientNode) {
+    //       if (patientNode.children == null) patientNode.children = [];
+    //       patientNode.children.push(treeNode);
+    //     }
+    //     // 找到根节点
+    //     if (patientId === 0) root = treeNode;
+    //   });
+    //   return root;
+    // }
+    // const arr = [
+    //   { id: 1, name: '部门A', patientId: 0 },
+    //   { id: 2, name: '部门B', patientId: 1 },
+    //   { id: 3, name: '部门C', patientId: 1 },
+    //   { id: 4, name: '部门D', patientId: 2 },
+    //   { id: 5, name: '部门E', patientId: 2 },
+    //   { id: 6, name: '部门F', patientId: 3 },
+    // ]
+    // const tree = convert(arr);
+    // console.log(tree);
+
+    // 树转数组
+    function convert1(root) {
+      const nodeToPatient = new Map();
+      const arr = [];
+
+      // 广度优先遍历 使用队列
+      const queue = [];
+      queue.unshift(root); // 根节点入队
+
+      while(queue.length > 0) {
+        const curNode = queue.pop(); // 出队
+        if (curNode == null) break;
+
+        const { id, name, children = [] } = curNode;
+
+        // 创建数组item并push
+        const patientNode = nodeToPatient.get(curNode);
+        const patientId = patientNode?.id || 0;
+        const item = { id, name, patientId };
+        arr.push(item);
+
+        // 子节点入队
+
+        children.forEach(child => {
+          nodeToPatient.set(child, curNode);
+          queue.unshift(child);
+        });
+      }
+      return arr;
+    }
+    const tree = {
+      id: 1,
+      name: '部门A',
+      children: [
+        {
+          id: 2,
+          name: '部门B',
+          children: [
+            {
+              id: 4,
+              name: '部门D',
+            },
+            {
+              id: 5,
+              name: '部门E',
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: '部门C',
+          children: [
+            {
+              id: 3,
+              name: '部门F',
+            },
+          ],
+        },
+      ],
+    }
+    const arr = convert1(tree);
+    console.log(arr);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

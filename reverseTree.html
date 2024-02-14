@@ -6,9 +6,7 @@
   <title>Document</title>
   <script>
     function reverseTree(root) {
-      if (typeof root !== 'object' || root == null) {
-        return;
-      }
+      if (root == null) return null;
       [root.left, root.right] = [root.right, root.left];
       reverseTree(root.left);
       reverseTree(root.right);
