@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>msg-localStorage-detail</title>
+</head>
+<body>
+  <button id="btn">修改标题</button>
+  <script>
+    const btn = document.getElementById('btn');
+    btn.onclick = function() {
+      const newInfo = {
+        id: 100,
+        name: '标题' + Date.now(),
+      };
+      localStorage.setItem('titleChange', JSON.stringify(newInfo));
+    }
+  </script>
+</body>
+</html>

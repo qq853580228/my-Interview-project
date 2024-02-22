@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function* fun () {
+      return 3;
+      yield 1;
+      yield 2;
+    }
+    const fn = fun();
+    console.log(fn.next()); // { value: 3, done: true }
+    console.log(fn.next()); // { value: undefined, done: true }
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

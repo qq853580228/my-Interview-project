@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>msg-localStorage-list</title>
+</head>
+<body>
+  <div>这里是列表</div>
+  <script>
+    window.addEventListener('storage', e => {
+      console.log('key' + e.key);
+      console.log('value' + e.newValue);
+    })
+  </script>
+</body>
+</html>

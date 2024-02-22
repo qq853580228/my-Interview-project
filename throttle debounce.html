@@ -7,11 +7,22 @@
   <script>
     function throttle(fn, delay = 500) {
       let end = 0;
-      return (...args) => {
+      return function(...args) {
         const now = Date.now();
         if (now - end >= delay) {
-          fn.apply(this, args);
+          fn.apply(null, args);
           end = now;
+        }
+      }
+    }
+    function throttle1(fn, delay = 500) {
+      let timer = null;
+      return function(...args) {
+        if (!timer) {
+          timer = setTimeout(() => {
+            fn.apply(this, args);
+            timer = null;
+          }, delay);
         }
       }
     }
@@ -43,6 +54,24 @@
       }
       return decodeURIComponent(result[2]);
     }
+    function curry(fn) {
+      const fnArgsLen = fn.length;
+      let resultArgs = [];
+      function calc(...newArgs) {
+        resultArgs = [...resultArgs, ...newArgs];
+        if (resultArgs.length >= fnArgsLen) {
+          return fn.apply(this, resultArgs.slice(0, fnArgsLen));
+        } else {
+          return calc;
+        }
+      }
+      return calc;
+    }
+    function sum(a, b, c) {
+      return a + b + c;
+    }
+    const result = curry(sum)(10, 20)(30);
+    console.log(result);
   </script>
 </head>
 <body>

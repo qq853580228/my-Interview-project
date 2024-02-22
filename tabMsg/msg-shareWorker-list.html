@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>msg-shareWorker-list</title>
+</head>
+<body>
+  <div>msg-shareWorker-list</div>
+  <script>
+    const worker = new SharedWorker('./worker.js');
+    worker.port.onmessage = e => {
+      console.info('list', e.data);
+    }
+  </script>
+</body>
+</html>
