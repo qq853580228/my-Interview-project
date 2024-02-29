@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <button id="btn1">修改url</button>
+  <script>
+
+    window.addEventListener('popstate', event => {
+      console.log('popstate', event.state, location.pathname);
+    })
+
+    // 页面首次加载，获取path
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOMContentLoaded path', location.pathname);
+    });
+
+    const btn1 = document.getElementById('btn1');
+    // 打开新的路由，使用pushState不会刷新页面
+    btn1.addEventListener('click', function (event) {
+      const state = { name: 'page1' };
+      // 切换路由到page1
+      history.pushState(state, '', 'page1')
+    })
+  </script>
+</body>
+</html>

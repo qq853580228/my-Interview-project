@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function NumToChina(n) {
+      n = n.toString();
+      console.log({n});
+      let numbers = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+      if (n === '0') return numbers[0];
+      let units = ['', '十', '百', '千'];
+      let len = n.length;
+      let res = '';
+      for (let i = 0; i < len; i++) {
+        let num = Number(n[i]);
+        if (num != 0) {
+          if (n[i - 1] === '0') res = res + numbers[0];
+          res = res + numbers[num] + units[len - i - 1];
+        }
+      }
+      if (len == 2 && n[0] == '1') res = res.slice(1);
+      return res;
+    }
+
+    function numTo(n) {
+      const isLose = n < 0;
+      n = Math.abs(n).toString();
+      let res = [];
+      let len = n.length;
+      for (let i = len; i > 0; i -= 4) {
+        console.log(n.slice(Math.max(0, i - 4), i));
+        res.push(NumToChina(n.slice(Math.max(0, i - 4), i)));
+      }
+      // console.log(res);
+      const units = ['', '万', '亿'];
+      for (let i = 0; i < res.length; i++) {
+        if (res[i] == '') continue;
+        res[i] = res[i] + units[i];
+      }
+      isLose && res.push('负');
+      return res.reverse().join('');
+    }
+    const res = numTo(12345);
+    console.log('res --- ' + res);
+    
+    // function trans(arr = []) {
+    //   return arr.sort((a, b) => a > b ? -1 : 1)
+    // }
+
+    // 降序
+    function trans(arr = []) {
+      const p = 1000;
+      const dotMax = Math.max(...arr.map(i => i.split('.').length));
+      const reducer = (acc,value,index) => {
+        return acc+(+value)*Math.pow(p,dotMax-index-1);
+      }
+      const gen = (arr) =>
+      arr.split('.').reduce(reducer,0);
+      
+      return arr.sort((a, b) => gen(a)>gen(b)?-1:1)
+    }
+    const arr = ['0.1.1', '2.3.3', '0.302.1', '4.2', '4.3.5', '4.3.4.5'];
+    console.log(trans(arr));
+
+    var p1 = new Promise((resolve, reject) => {
+      resolve('p1');
+    });
+    var p2 = new Promise((resolve, reject) => {
+      resolve('p2');
+    });
+    var p3 = new Promise((resolve, reject) => {
+      reject('p3');
+    });
+    Promise.all([p1, p2, p3].map(p => {
+      console.log(p.catch(e => '出错后返回的值' ));
+      return p.catch(e => '出错后返回的值' )
+    }))
+      .then(values => {
+        console.log(values);
+      }).catch(err => {
+        console.log(err);
+      })
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

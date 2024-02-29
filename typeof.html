@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function myTypeof(data) {
+      const dataType = Object.prototype.toString.call(data).replace(/\[object (\S+)\]/, '$1');
+      console.log(dataType);
+    }
+    console.log(myTypeof('123'));
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

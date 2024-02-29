@@ -38,6 +38,18 @@
       return res
     }
     // fnn.myApply({ name: 'bls' }, [10, 20])
+
+    async function async1() {
+      console.log('async1 start');
+      await new Promise((resolve, reject) => {
+        resolve('resolve');
+      })
+      console.log('async1 end');
+      // return 1;
+    }
+    console.log('script start');
+    async1().then(res => console.log(res));
+    console.log('script end');
   </script>
   <style>
     .box {

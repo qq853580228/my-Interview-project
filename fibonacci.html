@@ -57,10 +57,22 @@
     console.log(fibonacci3(7));
     
     function fibonacci4(n, start = 1, total = 1) {
+      console.log({n, start, total});
       if (n <= 2) return total;
       return fibonacci4(n - 1, total, total + start);
     }
-    console.log(fibonacci4(7));
+    console.log(fibonacci4(6));
+
+    function start(fn, delay = 1000) {
+      fn && fn();
+      setTimeout(() => {
+        start(fn);
+      }, delay);
+    }
+    function fn() {
+      console.log('1');
+    }
+    start(fn);
   </script>
 </head>
 <body>

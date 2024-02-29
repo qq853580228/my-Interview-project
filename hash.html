@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <button id="btn1">修改hash</button>
+  <script>
+
+    /* 
+      hash值的变化包括
+      1、js修改url
+      2、手动修改url的hash location.hash = '#/user'
+      3、浏览器前进后退
+    */
+
+    window.addEventListener('hashchange', event => {
+      console.log('new url', event.newURL);
+      console.log('old url', event.oldURL);
+      console.log('hash', location.hash);
+    })
+
+    // 页面首次加载，获取hash
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOMContentLoaded hash', location.hash);
+    });
+
+    const btn1 = document.getElementById('btn1');
+    btn1.addEventListener('click', function (event) {
+      location.hash = '#/user'
+    })
+  </script>
+</body>
+</html>

@@ -12,7 +12,7 @@
       }
       const handler = {
         get(target, key, receiver) {
-          if (Reflect.ownKeys(target, key).includes(key)) {
+          if (Reflect.ownKeys(target).includes(key)) {
             // console.log('get', key);
           }
           console.log('get', key);
@@ -28,7 +28,13 @@
           if (val === target[key]) {
             return true;
           }
-          console.log('set', key);
+          
+          if (Reflect.ownKeys(target).includes(key)) {
+            console.log('已有的key', key);
+          } else {
+            console.log('新增的key', key);
+          }
+
           const result = Reflect.set(target, key, val, receiver);
           return result; // 是否设置成功
         },
