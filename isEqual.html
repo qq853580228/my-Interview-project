@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function isObject(target) {
+      return typeof target === 'object' && target !== null;
+    }
+    function isEqual(obj1, obj2) {
+      if (!isObject(obj1) || !isObject(obj2)) {
+        return obj1 === obj2;
+      }
+      if (obj1 === obj2) {
+        return true;
+      }
+      // 两个都是对象或者数组，而且不相等
+      // 1、先取出 obj1 和 obj2 的 keys，比较长度
+      Object.keys(obj1) !== Object.keys(obj2) {
+        return false;
+      }
+      // 2、以 obj1 为基准，和 obj2 递归比较
+      for (const key in obj1) {
+        if (Object.hasOwnProperty.call(obj1, key)) {
+          if (!isEqual(obj1[key], obj2[key])) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

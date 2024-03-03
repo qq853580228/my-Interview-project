@@ -36,6 +36,51 @@
     // MyPromise.reject(2).catch(data => { console.log(data) });
     MyPromise.all([p1, p2, p3]).then(res => console.log(res));
     MyPromise.race([p1, p2, p3]).then(res => console.log(res));
+
+    const p4 = new Promise((resolve, reject) => {
+      resolve(1);
+      reject('err1');
+    });
+    const p5 = new Promise((resolve, reject) => {
+      resolve(2);
+      reject('err2');
+    });
+    const p6 = new Promise((resolve, reject) => {
+      reject('err3');
+    });
+
+    // Promise.race([p4, p5, p6]).then(res => {
+    //   console.log('resolve', res);
+    // }).catch(err => {
+    //   console.log('reject', err);
+    // })
+
+    // Promise.any([p4, p5, p6]).then(res => {
+    //   console.log('resolve', res);
+    // }).catch(err => {
+    //   console.log('reject', err);
+    // })
+
+    const p7 = Promise.resolve().then(() => {
+      
+      throw new Error('手动的err')
+    }).catch(err => console.log(err)) // 会触发catch回调，catch正常返回fulfilled
+
+    console.log(p7); // fulfilled，因为调用了catch
+
+    const p8 = Promise.resolve().then(() => {
+      
+      throw new Error('手动的err')
+    })
+
+    console.log(p8); // rejected，因为没有调用了catch
+
+    const p9 = Promise.reject('my error').catch(err => {
+      console.log(err);
+      // throw new Error('手动的err')
+    })
+
+    console.log(p9); // fulfilled
   </script>
 </head>
 <body>

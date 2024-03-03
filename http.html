@@ -19,8 +19,8 @@
     // 200 请求成功
 
     // 3xx 重定向 配合location 浏览器自动处理
-    // 301 永久重定向 请求的地址已被永久移动到新位置 浏览器以后自动访问新地址
-    // 302 临时重定向 
+    // 301 永久重定向 请求的地址已被永久移动到新位置 浏览器以后自动访问新地址（配合location，浏览器自动处理）
+    // 302 临时重定向（配合location，浏览器自动处理）
     // 304 资源未被修改 服务器端和客户端资源一样
 
     // 4xx 客户端错误
@@ -40,10 +40,26 @@
     // Accept-Encoding 浏览器可以支持的web服务器返回内容压缩编码类型 compress, gzip
     // Accept-Language 浏览器可以接收的语言
 
-    // Cache-Control 浏览器可以接收的缓存类型
+    // Cache-Control 浏览器可以接收的缓存类型（强缓存）
     // max-age 设置缓存有效期 有效期内不需要重新获取 
     // no-cache:可以在本地进行缓存，每次发起请求都要去服务器验证，如果服务器返回的请求告诉浏览器可以使用本地的缓存，才能使用本地的缓存。（需要经过服务器端的验证）
     // no-store是彻底不能在本地或者代理服务器存储缓存，也不会有验证环节，永远请求服务器的数据。
+
+    // 协商缓存
+    /* 
+      Etag和Last-Modified优先级
+      在HTTP响应头中，`ETag`和`Last-Modified`都是用于控制缓存和缓存更新的机制。
+      `ETag`通常是一个字符串(资源的唯一标识)，用于标识资源是否发生了更改，而`Last-Modified`则是一个日期，用于表示最后一次修改资源的时间。
+
+      在优先级上，`ETag`的优先级高于`Last-Modified`。这是因为`ETag`提供了更高的精确性，
+      它可以是一个文档的序列号或版本号，或者是文档内容的校验等。当文档改变时，
+      `ETag`值也会随之改变。与`ETag`相关的是`If-None-Match`，当浏览器发起请求时，会在`If-None-Match`字段携带`ETag`的值发给服务器。
+
+      另一方面，`Last-Modified`的性能要高于`ETag`，但是精确性却逊色于`ETag`。
+      与`Last-Modified`相关的是`If-Modified-Since`，当浏览器发起请求时，会在`If-Modified-Since`字段携带`Last-Modified`的值发送给服务器。
+
+      总结来说，如果两者都存在，服务器会优先判断`ETag`的值，只有在`ETag`没有变化的情况下，才会去比较`Last-Modified`的时间戳。
+    */
 
     // Connection 一般设置keep-alive进行持久连接
     // Cookie http请求时 会把保存在该请求域名下所有的cookie值发送到服务器
@@ -63,6 +79,7 @@
     // Content-Type 返回内容的MIME类型 Content-Type: text/html; charset=utf-8
     // Server web服务器软件名称 nginx/
     // Location 用来重定向接收方到非请求URL的位置来完成请求或标识新的资源
+    // Set-cookie 服务端设置cookie
 
     // TCP三次握手
     // 刚开始客户端处于 Closed 的状态，而服务端处于 Listen 状态：
