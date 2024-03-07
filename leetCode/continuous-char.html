@@ -7,11 +7,12 @@
   <script>
     function continuousChar(str = '') {
       length = str.length;
-      if (length <= 0) return;
       const res = {
         char: '',
         count: 0,
       }
+      if (length <= 0) return res;
+
       let tempCount = 0; // 临时变量 存储当前连续字符串的长度
       for (let i = 0; i < length; i++) {
         tempCount = 0; // 重置
@@ -36,11 +37,12 @@
     }
     function continuousChar1(str = '') {
       length = str.length;
-      if (length <= 0) return;
       const res = {
         char: '',
         count: 0,
       }
+      if (length <= 0) return res;
+      
       let tempCount = 0; // 临时变量 存储当前连续字符串的长度
       let i;
       let j = 0;
