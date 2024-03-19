@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    /* 
+      原型链继承是指将父类实例作为子类的原型，
+      子类实例可以共享父类实例的属性和方法，但是无法向父类构造函数传递参数。 
+    */
+    // function Parent(name) {
+    //   this.name = name;
+    // }
+
+    // Parent.prototype.sayHello = function() {
+    //   console.log('hello from parent');
+    // }
+
+    // function Child() {
+      
+    // }
+    // Child.prototype = new Parent('bls');
+    // const child = new Child();
+    // console.log('child', child);
+
+    /* 
+      借用构造函数继承是指在子类构造函数中调用父类构造函数，
+      并使用 call 或 apply 方法将父类的 this 指向子类实例。
+      这种方式的缺点是无法继承父类原型上的方法。
+    */
+    // function Parent(name) {
+    //   this.name = name;
+    // }
+
+    // Parent.prototype.sayHello = function() {
+    //   console.log('hello from parent');
+    // }
+
+    // function Child() {
+    //   Parent.call(this, 'bls');
+    // }
+    // const child = new Child();
+    // console.log('child', child);
+    /* 
+      组合继承是指将原型链继承和借用构造函数继承结合起来。
+      这种方式可以继承父类实例和原型上的属性和方法，
+      但是会调用两次父类构造函数，且父类原型上的属性和方法会被继承两次。
+    */
+    // function Parent(name) {
+    //   this.name = name;
+    // }
+
+    // Parent.prototype.sayHello = function() {
+    //   console.log('hello from parent');
+    // }
+
+    // function Child() {
+    //   Parent.call(this, 'bls');
+    // }
+    
+    // Child.prototype = new Parent('gzj');
+    // Child.prototype.constructor = Child;
+    // const child = new Child();
+    // console.log('child', child);
+
+    /* 
+      原型式继承是指创建一个空对象，并将父类实例作为该空对象的原型。
+      这种方式的缺点与原型链继承相同。
+    */
+    // function createObject(obj) {
+    //   function F() {}
+    //   F.prototype = obj;
+    //   return new F();
+    // }
+    // const parent = {
+    //   name: 'parent',
+    //   sayHello: function() {
+    //     console.log('hello from parent');
+    //   }
+    // };
+
+    // const child = createObject(parent);
+    // console.log(child.name); // parent
+    // child.sayHello(); // hello from parent
+
+    /* 
+      寄生式继承是指创建一个新对象，并在该对象上增加一些父类的属性和方法，然后返回该对象。
+      这种方式的缺点与原型式继承相同。
+    */
+
+    // function createObject(obj) {
+    //   const o = Object.create(obj);
+    //   o.sayHello = function () {
+    //     console.log('hello from parent');
+    //   }
+    //   return o;
+    // }
+
+    // const parent = {
+    //   name: 'bls',
+    // }
+
+    // const child = createObject(parent);
+    // console.log(child.name);
+    // child.sayHello();
+
+    /* 
+      寄生组合式继承是指使用“借用构造函数”继承父类实例的属性和方法，并将子类原型指向一个父类实例的副本。
+      这种方式可以避免调用两次父类构造函数，且不会继承父类原型上的属性和方法。
+    */
+    function Parent(name) {
+      console.log(name);
+      this.name = name;
+    }
+
+    Parent.prototype.sayHello = function() {
+      console.log('hello from parent');
+    };
+
+    function Child(name, age) {
+      Parent.call(this, name);
+      this.age = age;
+    }
+
+    Child.prototype = Object.create(Parent.prototype);
+    Child.prototype.constructor = Child;
+    const child = new Child('gzj', 18);
+    console.log(child);
+
+    /* 
+      因子类构造函数调用super（）时，会执行一次父类构造函数。
+      只有在子类的构造函数中调用super之后，才可以使用this关键字，否则会报错。
+      这是因为子类实例的构建，必须先完成父类的继承，只有super方法才能让子类实例继承父类。
+    */
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

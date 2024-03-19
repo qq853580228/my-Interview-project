@@ -1,3 +1,11 @@
+<!--
+ * @Author: zjy 853580228@qq.com
+ * @Date: 2024-03-05 12:48:36
+ * @LastEditors: zjy 853580228@qq.com
+ * @LastEditTime: 2024-03-15 22:26:08
+ * @FilePath: \my-Interview-project\deepcopy.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <script>
-    function deepClone(obj = {}, map = new WeakMap()) {
+    function deepClone1(obj, map = new WeakMap()) {
       const type = Object.prototype.toString.call(obj);
       if (typeof obj !== 'object' || obj === null || type === '[object Date]' || type === '[object RegExp]' || type === '[object Function]' || type === '[object Error]') return obj;
       if (map.get(obj)) return map.get(obj);
@@ -14,10 +22,50 @@
       map.set(obj, result);
       for (const key in obj) {
         if (Object.hasOwnProperty.call(obj, key)) {
-          result[key] = deepClone(obj[key], map);
+          result[key] = deepClone1(obj[key], map);
         }
       }
       return result;
+    }
+    function deepClone(obj, map = new WeakMap()) {
+      if (typeof obj !== 'object' || obj === null || obj instanceof Error) {
+        return obj;
+      } else if (obj instanceof RegExp) {
+        return new RegExp(obj);
+      } else if (obj instanceof Date) {
+        return new Date(obj);
+      } else {
+        if (map.get(obj)) return map.get(obj);
+        let result = {};
+        map.set(obj, result);
+
+        if (obj instanceof Array) {
+          result = obj.map(i => deepClone(i, map));
+        }
+        if (obj instanceof Map) {
+          result = new Map();
+          obj.forEach((v, k) => {
+            const k1 = deepClone(k, map);
+            const v1 = deepClone(v, map);
+            result.set(k1, v1);
+          });
+        }
+        if (obj instanceof Set) {
+          result = new Set();
+          obj.forEach(v => {
+            const v1 = deepClone(v, map);
+            result.add(v1);
+          });
+        }
+        if (obj instanceof Object) {
+          for (const key in obj) {
+            if (Object.hasOwnProperty.call(obj, key)) {
+              result[key] = deepClone(obj[key], map);
+            }
+          }
+        }
+        return result;
+      }
     }
     const obj = {
       name: "Jerry",
@@ -33,6 +81,7 @@
       reg: new RegExp(/abc/, ''),
       date: new Date(),
       company: Symbol('n/a'),
+      mapData: new Map([['name', 'bls']])
     }
     obj.c = obj;
     const newObj = deepClone(obj);

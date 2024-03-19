@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="box">
+    <p>p 标签</p>
+    <!-- 注释 -->
+    <img src="" alt="">
+  </div>
+  <script>
+    const box = document.getElementById('box');
+
+    function visitNode(node) {
+      if (node instanceof Comment) {
+        console.log('注释');
+      }
+      if (node instanceof Text) {
+        console.log('文本节点');
+      }
+      if (node instanceof HTMLElement) {
+        console.log('html 元素', node.tagName.toLowerCase());
+      }
+    }
+    
+    // 深度优先遍历 - 递归
+    function domTraverse1(root) {
+      visitNode(root);
+
+      const childNodes = root.childNodes;
+      if (childNodes?.length) {
+        childNodes.forEach(n => domTraverse1(n))
+      }
+    }
+    // domTraverse1(box);
+
+    // 深度优先遍历 - 栈 --- 后进先出
+    function domTraverse2(root) {
+      const stack = [];
+      stack.push(root);
+
+      while(stack.length) {
+        const curNode = stack.pop();
+        if (curNode == null) break;
+        visitNode(curNode);
+        const childNodes = curNode.childNodes;
+        if (childNodes?.length) {
+          Array.from(childNodes).reverse().forEach(n => stack.push(n));
+        }
+      }
+    }
+    // domTraverse2(box);
+
+    // 广度优先遍历 --- 队列 先进先出
+    function breadFirstTraverse(root) {
+      const queue = [];
+
+      queue.unshift(root);
+
+      while(queue.length) {
+        const curNode = queue.pop();
+        if (curNode == null) break;
+        visitNode(curNode);
+
+        const childNodes = curNode.childNodes;
+        if (childNodes?.length) {
+          childNodes.forEach(n => queue.unshift(n));
+        }
+      }
+    }
+    breadFirstTraverse(box);
+  </script>
+</body>
+</html>

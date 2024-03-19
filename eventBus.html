@@ -1,3 +1,11 @@
+<!--
+ * @Author: zjy 853580228@qq.com
+ * @Date: 2024-03-05 12:48:36
+ * @LastEditors: zjy 853580228@qq.com
+ * @LastEditTime: 2024-03-15 22:50:18
+ * @FilePath: \my-Interview-project\eventBus.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,6 +42,46 @@
         }
       }
     }
+    class EventBus1 {
+      constructor() {
+        this.events = {};
+        this.onceEvents = {};
+      }
+      on(type, fn) {
+        if (!this.events[type]) {
+          this.events[type] = [];
+        }
+        this.events[type].push(fn);
+      }
+      once(type, fn) {
+        if (!this.onceEvents[type]) {
+          this.onceEvents[type] = [];
+        }
+        this.onceEvents[type].push(fn);
+      }
+      off(type, fn) {
+        if (!fn) {
+          this.events[type] = [];
+          this.onceEvents[type] = [];
+        } else {
+          if (this.events[type]) {
+            this.events[type] = this.events[type].filter(i => i !== fn);
+          }
+          if (this.onceEvents[type]) {
+            this.onceEvents[type] = this.onceEvents[type].filter(i => i !== fn);
+          }
+        }
+      }
+      emit(type, ...args) {
+        if (this.events[type]) {
+          this.events[type].forEach(fn => fn(...args));
+        }
+        if (this.onceEvents[type]) {
+          this.onceEvents[type].forEach(fn => fn(...args));
+          this.onceEvents[type] = []
+        }
+      }
+    }
     function fn1(a, b) {
       console.info('fn1', a, b);
     }
@@ -43,7 +91,7 @@
     function fn3(a, b) {
       console.info('fn3', a, b);
     }
-    const eb = new EventBus();
+    const eb = new EventBus1();
     eb.on('key1', fn1);
     eb.on('key1', fn2);
     eb.once('key2', fn3);

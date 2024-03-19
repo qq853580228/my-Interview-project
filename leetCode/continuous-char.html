@@ -44,9 +44,8 @@
       if (length <= 0) return res;
       
       let tempCount = 0; // 临时变量 存储当前连续字符串的长度
-      let i;
       let j = 0;
-      for (i = 0; i < length; i++) {
+      for (let i = 0; i < length; i++) {
         if (str[i] === str[j]) {
           tempCount++;
         }

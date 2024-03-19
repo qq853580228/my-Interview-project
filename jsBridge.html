@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    const sdk = {
+      invoke(url, data, onSuccess, onError) {
+        const iframe = document.createElement('iframe');
+
+        iframe.onload = () => {
+          const content = iframe.contentWindow.document.body.innerHTML;
+          onSuccess(JSON.parse(content));
+          iframe.remove();
+        }
+
+        iframe.onerror = () => {
+          onError();
+          iframe.remove();
+        }
+         
+        iframe.src = `app-name://${url}?data=${JSON.stringify(data)}`;
+      }
+    }
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

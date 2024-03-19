@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    function flattenDeep1(arr = []) {
+      const res = [];
+      for (let i = 0; i < arr.length; i++) {
+        n = arr[i];
+        if (Array.isArray(n)) {
+          const flattenItem = flattenDeep1(n);
+          flattenItem.forEach(v => res.push(v));
+        } else {
+          res.push(n);
+        }
+      }
+      return res;
+    }
+
+    function flattenDeep2(arr = []) {
+      let res = [];
+      for (let i = 0; i < arr.length; i++) {
+        n = arr[i];
+        if (Array.isArray(n)) {
+          const flattenItem = flattenDeep2(n);
+          res = res.concat(flattenItem);
+        } else {
+          res.push(n);
+        }
+      }
+      return res;
+    }
+
+    const res1 = flattenDeep1([1, [2, 3, [4]]])
+    const res2 = flattenDeep2([1, [2, 3, [4]]])
+
+    console.log(res1, res2);
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

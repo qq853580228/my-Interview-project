@@ -8,10 +8,10 @@
     // 提取参数值
     function getQueryParams(name) {
       // const search = location.search.substr(1);
-      const search = 'a=10&b=11&c=12 ';
+      // const search = 'a=10&b=11&c=12';
+      const search = location.search;
       const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`, 'i');
       const result = search.match(reg);
-      console.log(result);
       if (result === null) {
         return;
       }

@@ -96,13 +96,9 @@ MyPromise.all = function(promiseList = []) {
 }
 MyPromise.race = function(promiseList = []) {
   return new MyPromise((resolve, reject) => {
-    let resolveFlag = false;
     promiseList.forEach(p => {
       p.then(res => {
-        if (!resolveFlag) {
-          resolveFlag = true;
-          resolve(res);
-        }
+        resolve(res);
       }).catch(err => {
         reject(err);
       })

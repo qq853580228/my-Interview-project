@@ -1,0 +1,63 @@
+<!--
+ * @Author: zjy 853580228@qq.com
+ * @Date: 2024-03-15 16:59:23
+ * @LastEditors: zjy 853580228@qq.com
+ * @LastEditTime: 2024-03-15 21:59:24
+ * @FilePath: \my-Interview-project\lazyLoadImg.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+    
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+  <script>
+    // function simpleThrottle(fn, delay = 300) {
+    //   let end = 0;
+    //   return function(...args) {
+    //     if (Date.now() - end >= delay) {
+    //       fn.applt(this, args);
+    //       end = Date.now();
+    //     }
+    //   }
+    // }
+    // function lazyLoadImg() {
+    //   const imgs = document.querySelectorAll('img[data-src]');
+    //   imgs.forEach(item => {
+    //     if (item.getBoundingClientRect().top < window.innerHeight) {
+    //       item.src = item.dataset.src;
+    //       item.removeAttribute('data-src');
+    //     }
+    //   });
+    // }
+    // window.addEventListener('scroll', simpleThrottle(lazyLoadImg1, 100));
+
+    /* 
+      Intersection Observer 这个构造函数的作用是它能够观察可视窗口与目标元素产生的交叉区域。
+      简单来说就是当用它观察我们的图片时，当图片出现或者消失在可视窗口，
+      它都能知道并且会执行一个特殊的回调函数，我们就利用这个回调函数实现我们的操作。
+    */
+    function lazyLoadImg(obs) {
+      for (const ob of obs) {
+        if (ob.isIntersecting) {
+          const img = ob.target;
+          const dataSrc = img.getAttribute('data-src');
+          img.setAttribute('src', dataSrc);
+          ob.unobserve(img);
+        }
+      }
+    }
+    const imgs = document.getElementsByTagName('img');
+    const observer = new IntersectionObserver(lazyLoadImg);
+    for (const img of imgs) {
+      observer.observe(img);
+    }
+  </script>
+</head>
+<body>
+  
+</body>
+</html>
