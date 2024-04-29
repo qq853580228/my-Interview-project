@@ -39,17 +39,28 @@
     }
     // fnn.myApply({ name: 'bls' }, [10, 20])
 
-    async function async1() {
-      console.log('async1 start');
-      await new Promise((resolve, reject) => {
-        resolve('resolve');
-      })
-      console.log('async1 end');
-      // return 1;
+    // async function async1() {
+    //   console.log('async1 start');
+    //   await new Promise((resolve, reject) => {
+    //     resolve('resolve');
+    //   })
+    //   console.log('async1 end');
+    //   // return 1;
+    // }
+    // console.log('script start');
+    // async1().then(res => console.log(res));
+    // console.log('script end');
+
+    window.name = 'bls';
+    const obj = {
+      name: 'gwy',
+      getName() {
+        return this.name;
+      },
     }
-    console.log('script start');
-    async1().then(res => console.log(res));
-    console.log('script end');
+    console.log((obj.getName)());
+    console.log((window.getName = obj.getName)());
+    console.log((obj.getName = obj.getName)());
   </script>
   <style>
     .box {

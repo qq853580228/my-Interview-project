@@ -46,6 +46,7 @@
           const img = ob.target;
           const dataSrc = img.getAttribute('data-src');
           img.setAttribute('src', dataSrc);
+          img.removeAttribute('data-src');
           ob.unobserve(img);
         }
       }

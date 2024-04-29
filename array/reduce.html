@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    Array.prototype.cusReduce = function(cb, initialValue) {
+      const arr = this;
+      let total = initialValue || arr[0];
+      let i = initialValue ? 0 : 1;
+      for (; i < arr.length; i++) {
+        total = cb(total, arr[i], arr);
+      }
+      return total;
+    }
+    // const res = [1, 2, 3].cusReduce((pre, cur) => pre + cur, 0);
+    // console.log(res);
+    const res = [1, 2, 3].cusReduce((pre, cur) => {
+      return pre.then(res => {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            console.log(cur);
+            resolve();
+          }, 1000);
+        })
+      })
+    }, Promise.resolve());
+
+  </script>
+</head>
+<body>
+  
+</body>
+</html>

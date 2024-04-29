@@ -11,6 +11,16 @@
     // 2-send方法已经被调用，已经接收到服务器返回的头信息和状态码
     // 3-正在接收服务器端传来的数据体body，此时responseType等于text或者为空字符串，responseText包含接收到的部分信息
     // 4-服务器返回的数据已经完全接收，或者本次接收已经失败
+    function ajax({ url, method, data, success }) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          typeof success === 'function' && success(xhr.responseText);
+        }
+      }
+      xhr.send(data)
+    }
 
     // status
     // 1xx 临时的响应
