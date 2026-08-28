@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>实现通用弹幕（PC & H5）</title>
+    <style>
+        :root {
+            --primary: #00a1d6;
+            --primary-hover: #00b5e5;
+            --bg: #0f1115;
+            --panel: #1b1f26;
+            --panel-2: #242932;
+            --border: #2f3540;
+            --text: #e6e8eb;
+            --text-dim: #9aa0a8;
+            --danger: #f25d43;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrap {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h1 .tag {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: var(--panel-2);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+
+        /* ---------- 播放舞台 ---------- */
+        .player {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background:
+                radial-gradient(1200px 600px at 30% 20%, #2a3350 0%, transparent 60%),
+                radial-gradient(900px 500px at 80% 90%, #3a2a4a 0%, transparent 55%),
+                linear-gradient(135deg, #14182a 0%, #1a1d2e 100%);
+            overflow: hidden;
+        }
+
+        .stage-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .stage-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.18);
+            font-size: clamp(20px, 5vw, 40px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* ---------- 弹幕层 ---------- */
+        .danmaku-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            will-change: opacity;
+        }
+
+        .danmaku-item {
+            position: absolute;
+            left: 0;
+            top: 0;
+            white-space: nowrap;
+            font-weight: 600;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.7), 1px 1px 2px rgba(0, 0, 0, 0.6);
+            user-select: none;
+            pointer-events: auto;          /* 悬停时可捕获鼠标事件 */
+            will-change: transform;
+            transform: translate3d(0, -9999px, 0); /* 初始隐藏，避免闪烁 */
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s, box-shadow 0.15s, outline-color 0.15s;
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+        .danmaku-item:hover {
+            background: rgba(0, 0, 0, 0.45);
+            outline-color: rgba(255, 255, 255, 0.55);
+        }
+        /* 自己发送的弹幕：黄底 + 黄色描边，与系统弹幕区分（用 box-shadow 不影响尺寸测量） */
+        .danmaku-item--self {
+            background: rgba(255, 196, 0, 0.18);
+            box-shadow: 0 0 0 1px rgba(255, 196, 0, 0.85);
+        }
+        .danmaku-item--self:hover {
+            background: rgba(255, 196, 0, 0.32);
+        }
+
+        /* ---------- 控制条 ---------- */
+        .controls {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 12px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .row + .row { margin-top: 10px; }
+
+        .input-wrap {
+            display: flex;
+            flex: 1 1 220px;
+            min-width: 160px;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 0;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        .btn {
+            background: var(--panel-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, transform 0.05s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #2c323d; }
+        .btn:active { transform: scale(0.97); }
+        .btn.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .btn.primary:hover { background: var(--primary-hover); }
+        .btn.danger:hover { background: #3a221d; border-color: var(--danger); color: var(--danger); }
+
+        select {
+            background: var(--panel-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .colors {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.15s;
+        }
+        .swatch:hover { transform: scale(1.12); }
+        .swatch.active { border-color: #fff; }
+        .swatch.custom {
+            background: conic-gradient(red, orange, yellow, green, cyan, blue, magenta, red);
+            position: relative;
+            overflow: hidden;
+        }
+        .swatch.custom input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .slider {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            font-size: 12px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+        .slider input[type="range"] {
+            width: 80px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        .slider b { color: var(--text); font-weight: 600; min-width: 28px; text-align: right; }
+
+        .group-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-right: 2px;
+        }
+
+        .type-cb {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            user-select: none;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .type-cb:hover { background: #2c323d; }
+        .type-cb input[type="checkbox"] {
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        .type-cb input[type="checkbox"]:not(:checked) + * { opacity: 0.55; }
+
+        /* 显示区域分段按钮组（10 / 25 / 50 / 75 / 100） */
+        .area-segs {
+            display: inline-flex;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .area-seg {
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 12px;
+            padding: 5px 9px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            border-right: 1px solid var(--border);
+        }
+        .area-seg:last-child { border-right: none; }
+        .area-seg:hover { color: var(--text); background: #2c323d; }
+        .area-seg.active {
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* ---------- H5 适配 ---------- */
+        @media (max-width: 640px) {
+            .wrap { padding: 10px; }
+            h1 { font-size: 16px; margin-bottom: 8px; }
+            .controls { padding: 10px; }
+            .row { gap: 6px; }
+            .btn { padding: 9px 12px; font-size: 13px; }
+            .input-wrap { flex: 1 1 100%; }
+            .slider input[type="range"] { width: 60px; }
+            .slider { flex: 1 1 calc(50% - 6px); justify-content: space-between; }
+            .colors { flex: 1 1 100%; }
+            select { flex: 1; }
+        }
+
+        .hint {
+            margin-top: 10px;
+            color: var(--text-dim);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .hint code {
+            background: var(--panel-2);
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>通用弹幕 <span class="tag">PC & H5</span></h1>
+
+        <div class="player">
+            <div class="stage" id="stage">
+                <div class="stage-grid"></div>
+                <div class="stage-label">DANMAKU</div>
+                <!-- 弹幕层 -->
+                <div class="danmaku-layer" id="danmakuLayer"></div>
+            </div>
+
+            <div class="controls">
+                <div class="row">
+                    <div class="input-wrap">
+                        <input type="text" id="inputText" placeholder="输入弹幕内容，回车发送…" maxlength="50">
+                    </div>
+                    <div class="colors" id="colors">
+                        <span class="group-label">颜色</span>
+                        <span class="swatch active" data-color="#ffffff" style="background:#ffffff"></span>
+                        <span class="swatch" data-color="#ff5b5b" style="background:#ff5b5b"></span>
+                        <span class="swatch" data-color="#ffce4d" style="background:#ffce4d"></span>
+                        <span class="swatch" data-color="#5dff8e" style="background:#5dff8e"></span>
+                        <span class="swatch" data-color="#5dc8ff" style="background:#5dc8ff"></span>
+                        <span class="swatch" data-color="#c35dff" style="background:#c35dff"></span>
+                        <span class="swatch" data-color="#ff5dc8" style="background:#ff5dc8"></span>
+                        <span class="swatch custom" title="自定义颜色">
+                            <input type="color" id="customColor" value="#00e5ff">
+                        </span>
+                    </div>
+                    <select id="typeSelect" title="弹幕类型">
+                        <option value="scroll">滚动</option>
+                        <option value="top">顶部</option>
+                        <option value="bottom">底部</option>
+                    </select>
+                    <button class="btn primary" id="sendBtn">发送</button>
+                </div>
+
+                <div class="row">
+                    <button class="btn" id="playBtn">⏸ 暂停</button>
+                    <button class="btn danger" id="clearBtn">清空</button>
+                    <label class="slider">
+                        透明度
+                        <input type="range" id="opacityRange" min="10" max="100" value="100">
+                        <b id="opacityVal">100</b>
+                    </label>
+                    <label class="slider">
+                        速度
+                        <input type="range" id="speedRange" min="30" max="200" value="100">
+                        <b id="speedVal">1.0×</b>
+                    </label>
+                    <label class="slider">
+                        字号
+                        <input type="range" id="fontRange" min="12" max="32" value="20">
+                        <b id="fontVal">20</b>
+                    </label>
+                </div>
+
+                <div class="row">
+                    <span class="group-label">类型</span>
+                    <label class="type-cb"><input type="checkbox" class="typeChk" value="scroll" checked> 滚动</label>
+                    <label class="type-cb"><input type="checkbox" class="typeChk" value="top" checked> 顶部</label>
+                    <label class="type-cb"><input type="checkbox" class="typeChk" value="bottom" checked> 底部</label>
+                    <label class="type-cb"><input type="checkbox" id="enabledChk" checked> 弹幕开关</label>
+                    <span class="group-label">显示区域</span>
+                    <div class="area-segs" id="areaSegs">
+                        <button class="area-seg" data-area="10">10%</button>
+                        <button class="area-seg" data-area="25">25%</button>
+                        <button class="area-seg" data-area="50">50%</button>
+                        <button class="area-seg" data-area="75">75%</button>
+                        <button class="area-seg active" data-area="100">100%</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <span class="group-label">屏蔽词</span>
+                    <div class="input-wrap">
+                        <input type="text" id="blockedWords" placeholder="用逗号分隔，如：广告,test,测试" maxlength="100">
+                    </div>
+                    <button class="btn" id="applyBlockBtn">应用</button>
+                </div>
+            </div>
+        </div>
+
+        <p class="hint">
+            支持 PC 与 H5：滚动 / 顶部 / 底部三种弹幕，<b>单轨道可承载多条弹幕</b>（首尾相接成一条流，轨道满再溢出到新轨道），<b>入口间距 + 追尾安全双校验防重叠</b>（中途调速也不会覆盖）。可调透明度、速度、字号，回车或点击「发送」即可上屏。
+            代码见 <code>Danmaku</code> 类，调用 <code>danmaku.add({text, type, color})</code> 即可发送。
+        </p>
+    </div>
+
+    <script>
+    /**
+     * 通用弹幕引擎 Danmaku
+     * - 支持滚动(scroll)、顶部(top)、底部(bottom)三种类型
+     * - 单轨道多条：同一物理轨道在水平安全的前提下可承载多条弹幕，首尾相接排成一条流；
+     *   轨道暂满时向下溢出到新轨道（多轨道自适应）
+     * - 防重叠（抗调速/抗改字号）：轨道占用与碰撞判定均根据「真实在飞弹幕 this.items」
+     *   的物理位置(top/x)与各自发射时的速度(pxSpeed)实时推导，不依赖易失的轨道状态，
+     *   因此中途调速、改字号、窗口缩放都不会因状态丢失而重叠
+     * - requestAnimationFrame 驱动，transform 渲染，性能友好
+     * - 兼容 PC 与 H5
+     */
+    class Danmaku {
+        constructor(options) {
+            this.container = options.container;
+            this.opts = Object.assign({
+                trackHeight: 0,        // 0 表示根据字号自动计算
+                fontSize: 20,          // 基础字号
+                opacity: 1,            // 透明度 0~1
+                speed: 1,              // 速度倍率
+                baseSpeed: 120,        // 基础滚动速度 px/s
+                minGap: 12,            // 同轨道入口最小间距 px
+                catchGap: 2,           // 追尾判定最小安全间距 px（防重叠阈值）
+                fixedDuration: 4000,   // 顶部/底部弹幕停留时长 ms
+                maxTracks: 0,          // 0 = 自适应
+                maxFixedTracks: 5,     // 顶部/底部最大轨道数
+                maxBuffer: 120,        // 等待队列最大长度，超出丢弃最早条目
+                hoverHoldMs: 3000,     // 鼠标悬停最长保持时间，到时自动解除（即使鼠标未离开）
+                allowedTypes: ['scroll', 'top', 'bottom'], // 允许的弹幕类型
+                blockedWords: [],      // 屏蔽词列表，命中则丢弃
+                displayArea: 100,      // 显示区域百分比（离散档位：10/25/50/75/100），仅控制滚动弹幕垂直占用高度
+                enabled: true,         // 弹幕总开关
+            }, options.opts || {});
+
+            this.items = [];          // 活动弹幕（碰撞判定的唯一数据源）
+            this.waiting = [];        // 等待入轨的弹幕
+
+            this.playing = false;
+            this._raf = null;
+            this._lastTime = 0;
+            this._trackHeight = 0;
+            this._trackCount = 0;
+            this._width = 0;
+            this._height = 0;
+            this._displayArea = 1.0;  // 实际显示区域百分比 0~1
+            this._gauge = null;       // 复用的离屏测量元素
+            this._hoverItem = null;   // 当前被悬停的弹幕（同一时刻仅一条，防级联）
+            this._hoverTimer = null;  // 悬停自动解除计时器
+            this._autoResume = false; // 开关关闭时若原处于 playing 状态，重开时自动恢复播放
+            this._nextTrack = 0;      // 滚动弹幕轮询选轨的起点（round-robin），让弹幕均匀分布到所有轨道
+
+            this._onResize = this._onResize.bind(this);
+            this._loop = this._loop.bind(this);
+
+            this._init();
+        }
+
+        _init() {
+            this.resize();
+            window.addEventListener('resize', this._onResize);
+            this._syncEnabled();
+        }
+
+        _onResize() {
+            // 防抖
+            clearTimeout(this._resizeTimer);
+            this._resizeTimer = setTimeout(() => this.resize(), 150);
+        }
+
+        /** 容器是否可见（用于开关切换时避免测量出 0 尺寸） */
+        _isContainerVisible() {
+            // 注意：getComputedStyle 在 display:none 时仍可读，但 clientWidth/clientHeight 会为 0
+            const w = this.container.clientWidth;
+            const h = this.container.clientHeight;
+            return w > 0 && h > 0;
+        }
+
+        /** 重新计算尺寸与轨道数量（不触碰在飞弹幕，碰撞数据由 this.items 实时推导，故不会丢失） */
+        resize() {
+            const w = this.container.clientWidth;
+            const h = this.container.clientHeight;
+            // 容器隐藏时不覆盖尺寸，否则开关切换后会用 0 发射导致重叠
+            if (w <= 0 || h <= 0) return;
+            this._width = w;
+            this._height = h;
+            const fs = this.opts.fontSize;
+            this._trackHeight = this.opts.trackHeight || Math.ceil(fs * 1.4);
+
+            // 滚动弹幕的垂直显示区域：从顶部开始，占容器高度 _displayArea 的比例
+            const scrollArea = this._height * this._displayArea;
+            const count = Math.max(1, Math.floor(scrollArea / this._trackHeight));
+            const max = this.opts.maxTracks > 0 ? this.opts.maxTracks : count;
+            this._trackCount = Math.min(count, max);
+        }
+
+        /** 添加一条弹幕 */
+        add(data) {
+            const item = {
+                text: String(data.text == null ? '' : data.text),
+                color: data.color || '#ffffff',
+                type: ['scroll', 'top', 'bottom'].includes(data.type) ? data.type : 'scroll',
+                fontSize: data.fontSize || this.opts.fontSize,
+                self: !!data.self,   // 自己发送的弹幕：渲染时加边框以区分
+            };
+            if (!item.text) return;
+            // 弹幕开关关闭：直接丢弃（不进 waiting），否则攒一整批后重开时会一起涌入导致重叠
+            if (!this.opts.enabled) return;
+            // 类型过滤
+            if (!this.opts.allowedTypes.includes(item.type)) return;
+            // 屏蔽词过滤
+            if (this._isBlocked(item.text)) return;
+            this.waiting.push(item);
+            // 等待队列过长（如提速后大量追尾被拦截）时丢弃最早条目，避免无限堆积
+            if (this.waiting.length > this.opts.maxBuffer) this.waiting.shift();
+            if (this.playing) this._flush();
+        }
+
+        /** 检查文本是否命中屏蔽词（忽略大小写、子串匹配） */
+        _isBlocked(text) {
+            const words = this.opts.blockedWords;
+            if (!words || !words.length) return false;
+            const low = text.toLowerCase();
+            for (const w of words) {
+                if (w && low.includes(w.toLowerCase())) return true;
+            }
+            return false;
+        }
+
+        /** 设置允许的弹幕类型数组，如 ['scroll','top'] */
+        setAllowedTypes(types) {
+            this.opts.allowedTypes = Array.isArray(types) ? types.slice() : ['scroll', 'top', 'bottom'];
+        }
+
+        /** 设置屏蔽词列表（数组或逗号分隔字符串） */
+        setBlockedWords(words) {
+            if (Array.isArray(words)) {
+                this.opts.blockedWords = words.slice();
+            } else if (typeof words === 'string') {
+                this.opts.blockedWords = words.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+            } else {
+                this.opts.blockedWords = [];
+            }
+        }
+
+        /** 设置显示区域百分比（离散档位：10 / 25 / 50 / 75 / 100），仅影响滚动弹幕垂直占用高度 */
+        setDisplayArea(percent) {
+            const p = this._snapDisplayArea(Number(percent) || 100);
+            if (p === this.opts.displayArea) return;          // 档位未变，跳过
+            this.opts.displayArea = p;
+            this._displayArea = p / 100;
+            this.resize();                                     // 更新 _trackCount
+            // 在飞弹幕保持原位置自然滚完，不移动；后续新弹幕按新的 _trackCount 选轨
+            if (this.playing) this._flush();
+        }
+
+        /** 仅清空在飞弹幕（保留 waiting 等待队列），用于弹幕开关等场景 */
+        _clearItems() {
+            this.items.forEach(rec => {
+                if (rec.el) {
+                    if (rec._onEnter) rec.el.removeEventListener('mouseenter', rec._onEnter);
+                    if (rec._onLeave) rec.el.removeEventListener('mouseleave', rec._onLeave);
+                    if (rec.el.parentNode) rec.el.parentNode.removeChild(rec.el);
+                }
+            });
+            clearTimeout(this._hoverTimer);
+            this._hoverItem = null;
+            this.items = [];
+        }
+
+        /** 将输入值吸附到最近的显示区域档位（10/25/50/75/100） */
+        _snapDisplayArea(v) {
+            const tiers = [10, 25, 50, 75, 100];
+            let best = tiers[0], bestDist = Infinity;
+            for (const t of tiers) {
+                const d = Math.abs(v - t);
+                if (d < bestDist) { bestDist = d; best = t; }
+            }
+            return best;
+        }
+
+        /** 同步容器显示状态（enabled=false 时隐藏所有弹幕，防止持续的 CPU 消耗） */
+        _syncEnabled() {
+            this.container.style.display = this.opts.enabled ? 'block' : 'none';
+        }
+
+        /** 弹幕总开关：关闭时清空并隐藏容器，开启时恢复显示 + 重新测量尺寸 */
+        setEnabled(flag) {
+            const next = !!flag;
+            if (next === this.opts.enabled) return;   // 状态未变，跳过
+            this.opts.enabled = next;
+            if (!next) {
+                // 关闭：记录是否需要自动恢复播放，然后暂停 + 清空 + 隐藏
+                this._autoResume = this.playing;
+                if (this.playing) this.pause();
+                this.clear();                          // 清空在飞弹幕 + waiting
+                this._syncEnabled();                   // 隐藏容器
+            } else {
+                // 开启：先显示容器 → 再测量尺寸 → 最后恢复 RAF 并 flush
+                // 顺序很关键：先 display:block，clientWidth 才有效，否则 resize() 读到 0
+                this._syncEnabled();
+                this.resize();                         // 必须在显示后测量，避免尺寸为 0
+                // 清空等待队列，确保从零开始，不攒旧条目
+                this.waiting.length = 0;
+                if (this._autoResume && !this.playing) {
+                    this._autoResume = false;
+                    this.play();
+                }
+                if (this.playing) this._flush();
+            }
+        }
+
+        /** 批量添加 */
+        addList(list) { list.forEach(d => this.add(d)); }
+
+        _flush() {
+            // 容器不可见 / 尺寸未初始化 → 不发射，避免用 0 计算导致重叠
+            if (!this._width || !this._height || !this._isContainerVisible()) return;
+            const now = performance.now();
+            const remaining = [];
+            for (const item of this.waiting) {
+                // 先用离屏 gauge 测量真实尺寸（含 padding/字号），再据此选轨
+                const m = this._measure(item);
+                const trackIdx = this._findTrack(item, m.width, m.height, now);
+                if (trackIdx === -1) {
+                    remaining.push(item); // 暂无空轨，继续等待
+                } else {
+                    this._launch(item, m.width, m.height, trackIdx, now);
+                }
+            }
+            this.waiting = remaining;
+        }
+
+        /** 用复用的离屏元素测量弹幕尺寸，避免反复增删 DOM */
+        _measure(item) {
+            if (!this._gauge) {
+                const g = document.createElement('div');
+                g.className = 'danmaku-item';
+                g.style.visibility = 'hidden';
+                g.style.position = 'absolute';
+                g.style.transform = 'translate3d(0, -9999px, 0)';
+                this.container.appendChild(g);
+                this._gauge = g;
+            }
+            const g = this._gauge;
+            g.textContent = item.text;
+            g.style.color = item.color;
+            g.style.fontSize = item.fontSize + 'px';
+            let w = g.offsetWidth;
+            let h = g.offsetHeight;
+            // 容器隐藏时 offsetWidth/offsetHeight 会为 0，使用估算值兜底，
+            // 否则 0 宽度会让选轨 / 碰撞检测全部失效导致重叠
+            if (w <= 0 || h <= 0) {
+                const fs = item.fontSize;
+                // 中文字约 1em，英文/数字约 0.55em，padding 左右各 8px
+                let estW = 16;
+                for (const ch of item.text) {
+                    estW += /[\u4e00-\u9fa5]/.test(ch) ? fs : fs * 0.55;
+                }
+                w = Math.ceil(estW);
+                h = Math.ceil(fs * 1.4);
+            }
+            return { width: w, height: h };
+        }
+
+        /** 查找可用轨道，返回索引；无可用返回 -1。碰撞判定均基于 this.items 的物理位置 */
+        _findTrack(item, width, height, now) {
+            if (this._trackCount <= 0) return -1;
+            if (item.type === 'scroll') {
+                const newSpeed = this.opts.baseSpeed * this.opts.speed;
+                // 轮询选轨（round-robin）：从上次发射轨道的下一个开始遍历，
+                // 让弹幕均匀分布到所有可用轨道，而非总堆在顶部。
+                // 这样扩大显示区域后，新弹幕会自然进入新增轨道，无需移动在飞弹幕
+                const start = this._nextTrack % this._trackCount;
+                for (let j = 0; j < this._trackCount; j++) {
+                    const i = (start + j) % this._trackCount;
+                    if (this._scrollTrackFits(i, height, newSpeed)) {
+                        this._nextTrack = (i + 1) % this._trackCount;
+                        return i;
+                    }
+                }
+            } else {
+                const count = Math.min(this._trackCount, this.opts.maxFixedTracks);
+                for (let i = 0; i < count; i++) {
+                    if (this._fixedTrackFits(item.type, i, height)) return i;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * 滚动轨道 i 是否可容纳新弹幕（垂直同带时再做水平入口间距 + 追尾校验）。
+         * 垂直带基于「当前」trackHeight，而在飞弹幕用其真实 top，故改字号后新旧弹幕的
+         * 垂直错位也能被检测到，不会叠在同一像素行。
+         */
+        _scrollTrackFits(i, newHeight, newSpeed) {
+            const trackH = this._trackHeight;
+            const cw = this._width;
+            const bandTop = i * trackH;
+            const bandBottom = bandTop + trackH;
+            for (let k = 0; k < this.items.length; k++) {
+                const p = this.items[k];
+                if (p.type !== 'scroll') continue;
+                const pTop = p.top;
+                const pBottom = pTop + p.itemHeight;
+                // 垂直不重叠 → 不同车道，互不影响
+                if (pTop >= bandBottom - 1 || pBottom <= bandTop + 1) continue;
+                // 同车道：水平入口间距校验（新弹幕左沿=cw，须与上一条右沿留 minGap）
+                const pRight = p.x + p.itemWidth;
+                if (cw - pRight < this.opts.minGap) return false;
+                // p 被悬停暂停（静止）：允许后车进入并与之重叠（由 z-index 保证后车滑到其下方，不抢悬停），故跳过追尾校验
+                if (p.paused) continue;
+                // 追尾校验：新弹幕更快时，须保证在 p 离屏前不会追上（间距 ≥ catchGap）
+                if (newSpeed > p.pxSpeed) {
+                    const tExitP = pRight / p.pxSpeed; // p 右沿触 0 的秒数
+                    if (tExitP > 0) {
+                        const gapAtPExit = cw - newSpeed * tExitP; // p 离屏时新弹幕左沿位置
+                        if (gapAtPExit < this.opts.catchGap) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        /** 顶部/底部轨道 i 是否可容纳：居中静止，垂直不与同类型在飞弹幕重叠即可 */
+        _fixedTrackFits(type, i, newHeight) {
+            const trackH = this._trackHeight;
+            const ch = this._height;
+            const count = Math.min(this._trackCount, this.opts.maxFixedTracks);
+            const bandTop = type === 'top' ? i * trackH : (ch - count * trackH) + i * trackH;
+            const bandBottom = bandTop + trackH;
+            for (let k = 0; k < this.items.length; k++) {
+                const p = this.items[k];
+                if (p.type !== type) continue;
+                const pTop = p.top;
+                const pBottom = pTop + p.itemHeight;
+                if (pTop < bandBottom - 1 && pBottom > bandTop + 1) return false; // 垂直重叠 → 占用
+            }
+            return true;
+        }
+
+        /** 发射一条弹幕到指定轨道（尺寸已由 _measure 给出，直接使用，避免二次测量） */
+        _launch(item, itemWidth, itemHeight, trackIdx, now) {
+            const el = document.createElement('div');
+            el.className = 'danmaku-item' + (item.self ? ' danmaku-item--self' : '');
+            el.textContent = item.text;
+            el.style.color = item.color;
+            el.style.fontSize = item.fontSize + 'px';
+            el.style.opacity = this.opts.opacity;
+            this.container.appendChild(el);
+
+            const cw = this._width;
+            const ch = this._height;
+            const trackH = this._trackHeight;
+
+            const rec = {
+                el, item, trackIdx, itemWidth, itemHeight, enterTime: now,
+                type: item.type,
+                top: 0,
+                x: 0,
+                paused: false,
+                _onEnter: null,
+                _onLeave: null,
+            };
+
+            // 鼠标悬停：暂停该弹幕（滚动弹幕整条车道一起暂停，防止后车追上；3s 后自动解除）
+            rec._onEnter = () => this._beginHover(rec);
+            rec._onLeave = () => this._endHover(rec);
+            el.addEventListener('mouseenter', rec._onEnter);
+            el.addEventListener('mouseleave', rec._onLeave);
+
+            if (item.type === 'scroll') {
+                rec.pxSpeed = this.opts.baseSpeed * this.opts.speed; // px/s
+                rec.top = trackIdx * trackH + (trackH - itemHeight) / 2;
+                rec.x = cw; // 左沿从右边界进入
+            } else {
+                const count = Math.min(this._trackCount, this.opts.maxFixedTracks);
+                const bandTop = item.type === 'top'
+                    ? trackIdx * trackH
+                    : (ch - count * trackH) + trackIdx * trackH;
+                rec.top = bandTop + (trackH - itemHeight) / 2;
+                rec.x = (cw - itemWidth) / 2; // 水平居中
+                rec.expireTime = now + this.opts.fixedDuration;
+            }
+
+            el.style.top = rec.top + 'px';
+            el.style.transform = 'translate3d(' + rec.x + 'px, 0, 0)';
+            this.items.push(rec);
+        }
+
+        /** 开始悬停：仅暂停本条弹幕（不暂停整条车道，后车可继续滚动并允许重叠） */
+        _beginHover(rec) {
+            if (this._hoverItem === rec) return;            // 已悬停本条
+            if (this._hoverItem) return;                    // 已有其它悬停，忽略（防后车级联触发）
+            this._hoverItem = rec;
+            rec.paused = true;
+            // 置于最上层：后车滑到本条下方时，指针仍命中本条 → 不会触发本条 mouseleave，也不会触发后车 mouseenter
+            rec.el.style.zIndex = '10';
+            clearTimeout(this._hoverTimer);
+            this._hoverTimer = setTimeout(() => this._endHover(rec), this.opts.hoverHoldMs);
+        }
+
+        /** 解除悬停：恢复本条弹幕（鼠标离开或 3s 到时） */
+        _endHover(rec) {
+            if (this._hoverItem !== rec) return;            // 非当前悬停条，忽略（如后车的 mouseleave）
+            this._hoverItem = null;
+            clearTimeout(this._hoverTimer);
+            rec.paused = false;
+            rec.el.style.zIndex = '';
+        }
+
+        _loop(timestamp) {
+            if (!this.playing) return;
+            const dt = this._lastTime ? (timestamp - this._lastTime) / 1000 : 0;
+            this._lastTime = timestamp;
+
+            const cw = this._width;
+            for (let i = this.items.length - 1; i >= 0; i--) {
+                const rec = this.items[i];
+                if (rec.type === 'scroll') {
+                    // 被悬停的弹幕停止滚动
+                    if (!rec.paused) {
+                        rec.x -= rec.pxSpeed * dt;
+                        rec.el.style.transform = 'translate3d(' + rec.x + 'px, 0, 0)';
+                    }
+                    // 完全移出左侧
+                    if (rec.x + rec.itemWidth < 0) {
+                        this._remove(i);
+                    }
+                } else {
+                    // 顶部/底部：被悬停时把剩余时间缓存，离开后再按剩余时间继续
+                    if (rec.paused) {
+                        if (rec._remaining == null) rec._remaining = Math.max(0, rec.expireTime - timestamp);
+                    } else {
+                        if (rec._remaining != null) {
+                            rec.expireTime = timestamp + rec._remaining;
+                            rec._remaining = null;
+                        }
+                        if (timestamp >= rec.expireTime) this._remove(i);
+                    }
+                }
+            }
+
+            // 尝试发射等待队列
+            this._flush();
+
+            this._raf = requestAnimationFrame(this._loop);
+        }
+
+        _remove(i) {
+            const rec = this.items[i];
+            if (this._hoverItem === rec) this._endHover(rec);   // 被悬停弹幕离场，先解除悬停
+            if (rec.el) {
+                if (rec._onEnter) rec.el.removeEventListener('mouseenter', rec._onEnter);
+                if (rec._onLeave) rec.el.removeEventListener('mouseleave', rec._onLeave);
+                if (rec.el.parentNode) rec.el.parentNode.removeChild(rec.el);
+            }
+            this.items.splice(i, 1);
+        }
+
+        play() {
+            if (this.playing) return;
+            this.playing = true;
+            this._lastTime = 0;
+            this._raf = requestAnimationFrame(this._loop);
+        }
+
+        pause() {
+            this.playing = false;
+            if (this._raf) cancelAnimationFrame(this._raf);
+            this._raf = null;
+        }
+
+        toggle() { this.playing ? this.pause() : this.play(); }
+
+        clear() {
+            this._clearItems();
+            this.waiting = [];
+        }
+
+        /** 设置透明度 0~1 */
+        setOpacity(v) {
+            this.opts.opacity = v;
+            this.container.style.opacity = v;
+        }
+
+        /** 设置速度倍率（已飞行弹幕保持各自发射时的速度，新弹幕使用新速度；追尾校验自动适配） */
+        setSpeed(v) {
+            this.opts.speed = v;
+        }
+
+        /** 设置字号，重新计算轨道高度/数量。在飞弹幕保留原尺寸与位置，自然滚离；新旧不会垂直重叠 */
+        setFontSize(v) {
+            this.opts.fontSize = v;
+            this.resize();
+        }
+
+        destroy() {
+            this.pause();
+            window.removeEventListener('resize', this._onResize);
+            this.clear();
+            if (this._gauge && this._gauge.parentNode) this._gauge.parentNode.removeChild(this._gauge);
+            this._gauge = null;
+        }
+    }
+
+    /* ---------------- 控制面板绑定 ---------------- */
+    (function () {
+        const layer = document.getElementById('danmakuLayer');
+        const danmaku = new Danmaku({
+            container: layer,
+            opts: { fontSize: 20, baseSpeed: 120, minGap: 14, fixedDuration: 4000 }
+        });
+
+        // 初始透明度
+        danmaku.setOpacity(1);
+        danmaku.play();
+
+        let currentColor = '#ffffff';
+        const inputText = document.getElementById('inputText');
+        const typeSelect = document.getElementById('typeSelect');
+        const sendBtn = document.getElementById('sendBtn');
+        const playBtn = document.getElementById('playBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        function send() {
+            const text = inputText.value.trim();
+            if (!text) return;
+            danmaku.add({ text, color: currentColor, type: typeSelect.value, self: true });
+            inputText.value = '';
+            inputText.focus();
+        }
+
+        sendBtn.addEventListener('click', send);
+        inputText.addEventListener('keydown', e => {
+            if (e.key === 'Enter') send();
+        });
+
+        // 颜色选择
+        const colorsWrap = document.getElementById('colors');
+        const customColor = document.getElementById('customColor');
+        colorsWrap.querySelectorAll('.swatch[data-color]').forEach(sw => {
+            sw.addEventListener('click', () => {
+                colorsWrap.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+                sw.classList.add('active');
+                currentColor = sw.dataset.color;
+            });
+        });
+        customColor.addEventListener('input', e => {
+            colorsWrap.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+            customColor.parentElement.classList.add('active');
+            currentColor = e.target.value;
+        });
+
+        // 播放/暂停
+        playBtn.addEventListener('click', () => {
+            danmaku.toggle();
+            playBtn.textContent = danmaku.playing ? '⏸ 暂停' : '▶ 播放';
+        });
+
+        // 清空
+        clearBtn.addEventListener('click', () => danmaku.clear());
+
+        // 透明度
+        const opacityRange = document.getElementById('opacityRange');
+        const opacityVal = document.getElementById('opacityVal');
+        opacityRange.addEventListener('input', e => {
+            const v = e.target.value / 100;
+            danmaku.setOpacity(v);
+            opacityVal.textContent = e.target.value;
+        });
+
+        // 速度
+        const speedRange = document.getElementById('speedRange');
+        const speedVal = document.getElementById('speedVal');
+        speedRange.addEventListener('input', e => {
+            const v = e.target.value / 100;
+            danmaku.setSpeed(v);
+            speedVal.textContent = v.toFixed(1) + '×';
+        });
+
+        // 字号
+        const fontRange = document.getElementById('fontRange');
+        const fontVal = document.getElementById('fontVal');
+        fontRange.addEventListener('input', e => {
+            const v = Number(e.target.value);
+            danmaku.setFontSize(v);
+            fontVal.textContent = v;
+        });
+
+        // 类型过滤
+        const typeChks = document.querySelectorAll('.typeChk');
+        function syncAllowedTypes() {
+            const types = [];
+            typeChks.forEach(cb => {
+                if (cb.id === 'enabledChk') return;   // 弹幕开关不算类型
+                if (cb.checked) types.push(cb.value);
+            });
+            danmaku.setAllowedTypes(types);
+        }
+        typeChks.forEach(cb => {
+            if (cb.id === 'enabledChk') return;      // 弹幕开关单独处理
+            cb.addEventListener('change', syncAllowedTypes);
+        });
+
+        // 弹幕总开关
+        const enabledChk = document.getElementById('enabledChk');
+        enabledChk.addEventListener('change', e => {
+            danmaku.setEnabled(e.target.checked);
+        });
+
+        // 显示区域（分段按钮：10 / 25 / 50 / 75 / 100）
+        const areaSegs = document.getElementById('areaSegs');
+        areaSegs.addEventListener('click', e => {
+            const btn = e.target.closest('.area-seg');
+            if (!btn) return;
+            const v = Number(btn.dataset.area);
+            areaSegs.querySelectorAll('.area-seg').forEach(b => b.classList.toggle('active', b === btn));
+            danmaku.setDisplayArea(v);
+        });
+
+        // 屏蔽词
+        const blockedInput = document.getElementById('blockedWords');
+        const applyBlockBtn = document.getElementById('applyBlockBtn');
+        applyBlockBtn.addEventListener('click', () => {
+            danmaku.setBlockedWords(blockedInput.value);
+            applyBlockBtn.textContent = '✓ 已应用';
+            setTimeout(() => applyBlockBtn.textContent = '应用', 1200);
+        });
+        blockedInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') applyBlockBtn.click();
+        });
+
+        // 演示数据
+        const demo = [
+            { text: '前方高能！！！', color: '#ff5b5b' },
+            { text: '哈哈哈哈哈哈哈哈', color: '#ffce4d' },
+            { text: '这波操作可以的', color: '#5dc8ff' },
+            { text: '弹幕护体', color: '#5dff8e' },
+            { text: '前方高能预警', color: '#ffffff' },
+            { text: '泪目了', color: '#c35dff' },
+            { text: 'awsl', color: '#ff5dc8' },
+            { text: '名场面', color: '#ffce4d' },
+            { text: '下次一定', color: '#5dc8ff' },
+            { text: '三连了三连了', color: '#5dff8e' },
+            { text: '爷青回', color: '#ff5b5b' },
+            { text: '这谁顶得住啊', color: '#ffffff' },
+            { text: '细节拉满', color: '#c35dff' },
+            { text: '草（一种植物）', color: '#5dff8e' },
+            { text: '我直接好家伙', color: '#ffce4d' },
+            { text: '顶上去', color: '#ff5b5b', type: 'top' },
+            { text: '底下来啦', color: '#5dc8ff', type: 'bottom' },
+        ];
+
+        // 分批投放，模拟真实弹幕流
+        let idx = 0;
+        function feed() {
+            if (idx >= demo.length) return;
+            const d = demo[idx++];
+            danmaku.add(d);
+            setTimeout(feed, 350 + Math.random() * 400);
+        }
+        feed();
+
+        // 循环补弹幕：以小 burst 投放（每次 3 条、间隔 60ms），若干轨道各自形成连续弹幕流，
+        // 直观展示「单轨道承载多条弹幕」；轨道满时自动溢出到新轨道（多轨道）。
+        setInterval(() => {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const d = demo[Math.floor(Math.random() * demo.length)];
+                    danmaku.add({ ...d });
+                }, i * 60);
+            }
+        }, 1100);
+
+        // 暴露到全局便于调试
+        window.danmaku = danmaku;
+    })();
+    </script>
+</body>
+</html>

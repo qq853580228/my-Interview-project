@@ -49,8 +49,24 @@
       }
       return res;
     }
-    // console.log(twoNumbers([1, 2, 3, 4, 5, 6, 7, 8, 9], 13)); // [4, 9]
+    function twoNumbers2(arr = [], target) {
+      const length = arr.length;
+      const res = [];
+      if (length === 0) return res;
+      const map = new Map();
+      for (let i = 0; i < length; i++) {
+        const n = arr[i];
+        if (map.has(target - n)) {
+          res.push(map.get(target - n), n);
+          break;
+        }
+        map.set(n, n);
+      }
+      return res;
+    }
+    console.log(twoNumbers([1, 2, 3, 4, 5, 6, 7, 8, 9], 13)); // [4, 9]
     console.log(twoNumbers1([1, 2, 3, 4, 5, 6, 7, 8, 9], 11)); // [2, 9]
+    console.log(twoNumbers2([1, 2, 3, 4, 5, 6, 7, 8, 9], 6)); // [2, 9]
   </script>
 </head>
 <body>
