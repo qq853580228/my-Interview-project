@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金塑宝 - 以塑为基 金质共赢</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* 深蓝近黑企业集团风 + 金色点缀，呼应"金塑宝"品牌 */
+            --primary: #1e3a8a;        /* 深海军蓝 */
+            --primary-dark: #0a1628;   /* 近黑藏蓝 */
+            --accent: #f59e0b;        /* 金色 */
+            --gold: #f59e0b;
+            --gold-dark: #b45309;
+            --dark: #0a1628;          /* 近黑藏蓝 */
+            --gray: #64748b;
+            --light: #f8fafc;
+            --white: #ffffff;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--dark);
+            line-height: 1.6;
+            background: var(--white);
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 0.8rem 5%;
+            box-shadow: 0 4px 20px rgba(10, 22, 40, 0.12);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+            padding: 0.3rem 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -4px;
+            width: 0;
+            height: 2px;
+            background: var(--gold);
+            border-radius: 2px;
+            transform: translateX(-50%);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold-dark);
+        }
+
+        .nav-links a.active {
+            color: var(--gold-dark);
+            font-weight: 600;
+        }
+
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4);
+        }
+
+        /* 通用区块样式 */
+        section {
+            padding: 6rem 5%;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--gold-dark);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .section-title p {
+            color: var(--gray);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 动画基础类 - 初始状态 */
+        .reveal {
+            opacity: 0;
+            transform: translateY(60px);
+            transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal.left { transform: translateX(-80px); }
+        .reveal.right { transform: translateX(80px); }
+        .reveal.scale { transform: scale(0.8); }
+        .reveal.rotate { transform: rotate(-15deg) translateY(40px); }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(0);
+        }
+
+        .reveal[data-delay="100"] { transition-delay: 0.1s; }
+        .reveal[data-delay="200"] { transition-delay: 0.2s; }
+        .reveal[data-delay="300"] { transition-delay: 0.3s; }
+        .reveal[data-delay="400"] { transition-delay: 0.4s; }
+        .reveal[data-delay="500"] { transition-delay: 0.5s; }
+
+        /* ============ 第一屏：企业历程视频 Hero ============ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, #0a1628 0%, #1e3a8a 50%, #0a1628 100%);
+            color: white;
+            padding-top: 80px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(30, 58, 138, 0.35) 0%, transparent 40%);
+            animation: float 20s ease-in-out infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, 30px); }
+        }
+
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* 底部对齐：裁切只发生在顶部，视频自带的底部标题文字不会被裁掉 */
+            object-position: center bottom;
+            /* 缩放动画以底边为基准，放大时底边不动，标题始终可见 */
+            transform-origin: center bottom;
+            z-index: 0;
+            /* animation: heroZoom 20s ease-in-out infinite alternate; */
+        }
+
+        @keyframes heroZoom {
+            from { transform: scale(1); }
+            to   { transform: scale(1.08); }
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg,
+                rgba(10, 22, 40, 0.78) 0%,
+                rgba(30, 58, 138, 0.55) 50%,
+                rgba(10, 22, 40, 0.70) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 第一屏视频上叠加的品牌标题 */
+        .hero-brand {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .hero-brand h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-brand p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.3em;
+        }
+
+        /* 滚动提示 */
+        .scroll-hint {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .scroll-hint .scroll-arrow {
+            font-size: 1.4rem;
+            color: var(--gold);
+            animation: bounceDown 2s ease-in-out infinite;
+        }
+
+        @keyframes bounceDown {
+            0%, 100% { transform: translateY(0); opacity: 0.85; }
+            50% { transform: translateY(8px); opacity: 0.4; }
+        }
+
+        /* ============ 第二屏：愿景标语 + 集团简介 ============ */
+        .hero-info {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            color: white;
+            background: linear-gradient(135deg, #0a1628 0%, #1e3a8a 50%, #0a1628 100%);
+            padding: 6rem 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(30, 58, 138, 0.35) 0%, transparent 40%);
+            animation: float 20s ease-in-out infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .vision-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .vision-text .section-tag {
+            background: rgba(245, 158, 11, 0.18);
+            color: var(--gold);
+        }
+
+        .vision-text h2 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.25;
+            background: linear-gradient(135deg, #ffffff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .vision-text .vision-sub {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .vision-text p {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .vision-image {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .vision-image img {
+            display: block;
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+        }
+
+        .vision-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), transparent 60%);
+            pointer-events: none;
+        }
+
+        /* 通用按钮 */
+        .btn {
+            padding: 0.9rem 2.2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        /* ============ 数据统计区 ============ */
+        .stats {
+            background: var(--dark);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem 1rem;
+            position: relative;
+        }
+
+        .stat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), #fcd34d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+
+        /* ============ 核心业务 ============ */
+        .services {
+            background: var(--light);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(10, 22, 40, 0.12);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(180, 83, 9, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: var(--dark);
+        }
+
+        .service-card p {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        /* ============ 发展历程时间线 ============ */
+        .features {
+            background: white;
+        }
+
+        .timeline {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--gold), rgba(245, 158, 11, 0.1));
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            padding: 1rem 2.5rem 2.5rem;
+        }
+
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            text-align: left;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            top: 1.5rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gold);
+            box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.2);
+            z-index: 2;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-dot {
+            right: -8px;
+        }
+
+        .timeline-item:nth-child(even) .timeline-dot {
+            left: -8px;
+        }
+
+        .timeline-year {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--gold-dark);
+            margin-bottom: 0.3rem;
+        }
+
+        .timeline-item h3 {
+            font-size: 1.15rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item p {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        /* ============ 新闻资讯 tab ============ */
+        .solutions {
+            background: var(--light);
+        }
+
+        .news-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .news-tab {
+            padding: 0.6rem 1.6rem;
+            background: transparent;
+            border: 1px solid rgba(10, 22, 40, 0.12);
+            color: var(--gray);
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .news-tab:hover {
+            color: var(--gold-dark);
+            border-color: var(--gold);
+        }
+
+        .news-tab.active {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: white;
+            border-color: transparent;
+        }
+
+        .news-panel {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .news-panel.active {
+            display: grid;
+            animation: fadeNews 0.4s ease;
+        }
+
+        @keyframes fadeNews {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .news-card {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 35px rgba(10, 22, 40, 0.1);
+        }
+
+        .news-thumb {
+            height: 140px;
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 2.2rem;
+            position: relative;
+        }
+
+        .news-thumb.g2 { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); }
+        .news-thumb.g3 { background: linear-gradient(135deg, #0f766e, #0a1628); }
+        .news-thumb.g4 { background: linear-gradient(135deg, #7c2d12, var(--gold-dark)); }
+
+        .news-date {
+            position: absolute;
+            top: 0.8rem;
+            left: 0.8rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--dark);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .news-body {
+            padding: 1.2rem 1.3rem 1.4rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-body h3 {
+            font-size: 1.02rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .news-body p {
+            color: var(--gray);
+            font-size: 0.85rem;
+            flex: 1;
+            margin-bottom: 0.8rem;
+        }
+
+        .news-link {
+            color: var(--gold-dark);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: gap 0.3s;
+        }
+
+        .news-link:hover { gap: 0.7rem; }
+
+        /* ============ 企业文化 ============ */
+        .testimonials {
+            background: white;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card {
+            background: var(--light);
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            position: relative;
+            text-align: center;
+            border: 1px solid rgba(245, 158, 11, 0.08);
+            transition: all 0.4s;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 18px 35px rgba(10, 22, 40, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .culture-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.2rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .testimonial-card h3 {
+            font-size: 1.25rem;
+            color: var(--dark);
+            margin-bottom: 0.8rem;
+        }
+
+        .testimonial-card p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* ============ 人才招聘 ============ */
+        .cta {
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 60%);
+        }
+
+        .career-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .career-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 18px;
+            padding: 2.5rem 2rem;
+            text-align: left;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .career-card:hover {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: var(--gold);
+            transform: translateY(-5px);
+        }
+
+        .career-icon {
+            font-size: 2.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .career-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            color: var(--gold);
+        }
+
+        .career-card p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .career-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .career-tag {
+            padding: 0.25rem 0.7rem;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--gold);
+            border-radius: 20px;
+            font-size: 0.78rem;
+        }
+
+        .career-card .btn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: white;
+            padding: 0.7rem 1.6rem;
+            font-size: 0.9rem;
+        }
+
+        /* ============ 联系我们 ============ */
+        .contact-section {
+            background: var(--light);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .contact-card {
+            background: white;
+            padding: 2.2rem 1.8rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 35px rgba(10, 22, 40, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .contact-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(180, 83, 9, 0.08));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+
+        .contact-card h4 {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-card p {
+            color: var(--gray);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        /* ============ 页脚 ============ */
+        footer {
+            background: var(--dark);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 4rem 5% 2rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+
+        .footer-brand p {
+            margin: 1rem 0;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            transform: translateY(-3px);
+        }
+
+        .footer-col h4 {
+            color: white;
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.7rem;
+        }
+
+        .footer-col ul a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-col ul a:hover {
+            color: var(--gold);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(245, 158, 11, 0.15);
+            font-size: 0.85rem;
+        }
+
+        /* ============ 汉堡菜单（小屏） ============ */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1001;
+        }
+
+        .menu-toggle span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--dark);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+            transform-origin: center;
+        }
+
+        .menu-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .menu-toggle.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+        .menu-toggle.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 22, 40, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 80%;
+            max-width: 320px;
+            background: white;
+            z-index: 1000;
+            padding: 90px 1.5rem 2rem;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-links li {
+            margin-bottom: 0.2rem;
+        }
+
+        .mobile-nav-links a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1rem;
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 1.05rem;
+            font-weight: 500;
+            border-radius: 10px;
+            border-left: 3px solid transparent;
+            transition: all 0.25s ease;
+        }
+
+        .mobile-nav-links a:hover {
+            background: var(--light);
+            padding-left: 1.3rem;
+        }
+
+        .mobile-nav-links a.active {
+            color: var(--gold-dark);
+            background: rgba(245, 158, 11, 0.08);
+            border-left-color: var(--gold);
+            font-weight: 600;
+        }
+
+        .mobile-nav-links a::after {
+            content: '→';
+            opacity: 0;
+            transition: opacity 0.2s;
+            color: var(--gold-dark);
+        }
+
+        .mobile-nav-links a:hover::after,
+        .mobile-nav-links a.active::after {
+            opacity: 1;
+        }
+
+        .mobile-menu-cta {
+            margin-top: auto;
+            padding-top: 1.5rem;
+        }
+
+        .mobile-menu-cta .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        body.menu-open {
+            overflow: hidden;
+        }
+
+        /* ============ 响应式 ============ */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .nav-cta { display: none; }
+            .menu-toggle { display: flex; }
+            .hero-brand h1 { font-size: 2.5rem; }
+            .vision-grid { grid-template-columns: 1fr; }
+            .vision-image img { height: 240px; }
+            .vision-text h2 { font-size: 1.8rem; }
+            .section-title h2 { font-size: 1.8rem; }
+            .footer-grid { grid-template-columns: 1fr; }
+            /* 时间线在小屏改为单侧 */
+            .timeline::before { left: 20px; }
+            .timeline-item {
+                width: 100%;
+                left: 0 !important;
+                text-align: left !important;
+                padding-left: 3rem;
+                padding-right: 1rem;
+            }
+            .timeline-item .timeline-dot {
+                left: 12px !important;
+                right: auto !important;
+            }
+            section { padding: 4rem 5%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="logo">
+            <span class="logo-icon">金</span>
+            金塑宝
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home">首页</a></li>
+            <li><a href="#about">关于我们</a></li>
+            <li><a href="#business">核心业务</a></li>
+            <li><a href="#news">新闻资讯</a></li>
+            <li><a href="#career">人才招聘</a></li>
+            <li><a href="#contact">联系我们</a></li>
+        </ul>
+        <button class="nav-cta">合作咨询</button>
+        <button class="menu-toggle" id="menuToggle" aria-label="切换菜单" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- 移动端遮罩 -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- 移动端抽屉菜单 -->
+    <aside class="mobile-menu" id="mobileMenu" aria-hidden="true">
+        <ul class="mobile-nav-links">
+            <li><a href="#home">首页</a></li>
+            <li><a href="#about">关于我们</a></li>
+            <li><a href="#business">核心业务</a></li>
+            <li><a href="#news">新闻资讯</a></li>
+            <li><a href="#career">人才招聘</a></li>
+            <li><a href="#contact">联系我们</a></li>
+        </ul>
+        <div class="mobile-menu-cta">
+            <button class="btn btn-primary">合作咨询 →</button>
+        </div>
+    </aside>
+
+    <!-- 第一屏：企业历程视频 -->
+    <section class="hero" id="home">
+        <video class="hero-video"
+               id="bannervideo"
+               autoplay
+               muted
+               loop
+               playsinline
+               preload="auto"
+               poster="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Modern%20corporate%20headquarters%20at%20dusk%20with%20glass%20facade%2C%20business%20district%20skyline%2C%20cinematic%20wide%20aerial%20shot%2C%20deep%20blue%20and%20gold%20cinematic%20color%20grading%2C%20professional%20corporate%20film%20still&image_size=landscape_16_9">
+            <source src="https://source.jinsubao.cn/static/official-website/videos/index/banner-4.mp4" type="video/mp4">
+            <!-- <source src="https://www.xiangyu-group.com/upfiles/onepage/202512/1766137319922.mp4" type="video/mp4"> -->
+        </video>
+        <!-- <div class="hero-overlay"></div> -->
+        <!-- <div class="hero-brand">
+            <h1 class="reveal">金塑宝</h1>
+            <p class="reveal" data-delay="100">以塑为基 · 金质共赢</p>
+        </div> -->
+        <div class="scroll-hint reveal" data-delay="300">
+            <span>向下滚动探索</span>
+            <span class="scroll-arrow">↓</span>
+        </div>
+    </section>
+
+    <!-- 第二屏：愿景标语 + 集团简介 -->
+    <section class="hero-info" id="about">
+        <div class="vision-grid">
+            <div class="vision-text">
+                <span class="section-tag reveal">关于金塑宝</span>
+                <h2 class="reveal" data-delay="100">以塑为基<br>金质共赢</h2>
+                <p class="vision-sub reveal" data-delay="200">致力于成为全球领先的塑料产业综合服务商</p>
+                <p class="reveal" data-delay="300">金塑宝集团深耕塑料产业二十余载，业务覆盖塑料原料贸易、改性塑料制品、塑料机械装备与供应链服务四大板块，构建起从源头到终端的完整产业生态。</p>
+                <p class="reveal" data-delay="400">我们以"金品质、塑未来"为使命，依托遍布全国的仓储物流网络与专业化团队，为上下游合作伙伴提供一站式、可信赖的塑料产业解决方案。</p>
+            </div>
+            <div class="vision-image reveal right" data-delay="200">
+                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Modern%20industrial%20plastics%20manufacturing%20facility%20with%20clean%20production%20lines%2C%20warehouse%20with%20stacked%20raw%20materials%2C%20blue%20sky%20dusk%2C%20professional%20corporate%20photography%2C%20gold%20and%20deep%20blue%20tones&image_size=portrait_4_3" alt="金塑宝产业基地">
+            </div>
+        </div>
+    </section>
+
+    <!-- 数据统计 -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="20" data-suffix="+">0</div>
+                <div class="stat-label">年行业深耕</div>
+            </div>
+            <div class="stat-item reveal" data-delay="100">
+                <div class="stat-number" data-target="12000" data-suffix="+">0</div>
+                <div class="stat-label">服务客户</div>
+            </div>
+            <div class="stat-item reveal" data-delay="200">
+                <div class="stat-number" data-target="8">0</div>
+                <div class="stat-label">生产基地</div>
+            </div>
+            <div class="stat-item reveal" data-delay="300">
+                <div class="stat-number" data-target="30" data-suffix="+">0</div>
+                <div class="stat-label">全球合作伙伴</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心业务 -->
+    <section class="services" id="business">
+        <div class="section-title reveal">
+            <span class="section-tag">核心业务</span>
+            <h2>四大产业板块协同发展</h2>
+            <p>从原料到制品，从装备到服务，构建完整的塑料产业价值链</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card reveal">
+                <div class="service-icon">📦</div>
+                <h3>塑料原料贸易</h3>
+                <p>通用塑料、工程塑料、特种塑料的大宗集采与分销，依托全国仓储网络实现快速交付。</p>
+            </div>
+            <div class="service-card reveal" data-delay="100">
+                <div class="service-icon">🏭</div>
+                <h3>塑料制品制造</h3>
+                <p>改性塑料研发与生产，提供注塑、挤出、吹塑等多元化定制制品，满足各行业应用需求。</p>
+            </div>
+            <div class="service-card reveal" data-delay="200">
+                <div class="service-icon">⚙️</div>
+                <h3>塑料机械装备</h3>
+                <p>注塑机、挤出机、辅机等塑料加工装备的销售与服务，提供智能化产线升级方案。</p>
+            </div>
+            <div class="service-card reveal" data-delay="300">
+                <div class="service-icon">🚚</div>
+                <h3>供应链服务</h3>
+                <p>仓储物流、供应链金融、信息咨询一体化服务，助力上下游企业降本增效、稳健发展。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 发展历程 -->
+    <section class="features" id="history">
+        <div class="section-title reveal">
+            <span class="section-tag">发展历程</span>
+            <h2>二十载深耕 塑造未来</h2>
+            <p>每一步跨越，都是对品质与承诺的坚守</p>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item reveal left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2004</div>
+                <h3>集团创立</h3>
+                <p>金塑宝于东南沿海起航，开启塑料原料贸易的创业征程。</p>
+            </div>
+            <div class="timeline-item reveal right">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2010</div>
+                <h3>产业链延伸</h3>
+                <p>自建塑料制品生产基地，业务从贸易向制造延伸，形成工贸一体化格局。</p>
+            </div>
+            <div class="timeline-item reveal left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2016</div>
+                <h3>全国布局</h3>
+                <p>建成八大区域仓储中心，服务网络覆盖全国，客户规模突破万家。</p>
+            </div>
+            <div class="timeline-item reveal right">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2021</div>
+                <h3>数智升级</h3>
+                <p>上线塑料产业数字化平台，打通原料、制品、装备、金融全链路服务。</p>
+            </div>
+            <div class="timeline-item reveal left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-year">2026</div>
+                <h3>迈向全球</h3>
+                <p>携手 30+ 全球合作伙伴，以"金品质、塑未来"愿景迈向国际市场。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 新闻资讯 -->
+    <section class="solutions" id="news">
+        <div class="section-title reveal">
+            <span class="section-tag">新闻资讯</span>
+            <h2>金塑宝动态</h2>
+            <p>关注集团最新发展，洞察塑料产业前沿趋势</p>
+        </div>
+
+        <div class="news-tabs reveal">
+            <button class="news-tab active" data-tab="tab1">资讯动态</button>
+            <button class="news-tab" data-tab="tab2">媒体报道</button>
+            <button class="news-tab" data-tab="tab3">专题专栏</button>
+            <button class="news-tab" data-tab="tab4">通知公告</button>
+        </div>
+
+        <div class="news-panel active" id="tab1">
+            <article class="news-card">
+                <div class="news-thumb">📰<span class="news-date">2026-08-28</span></div>
+                <div class="news-body">
+                    <h3>金塑宝集团2026半年度经营会议圆满召开</h3>
+                    <p>集团复盘上半年业绩，部署下半年战略，四大板块均实现稳健增长。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g2">📊<span class="news-date">2026-08-15</span></div>
+                <div class="news-body">
+                    <h3>塑料原料价格指数平台正式上线</h3>
+                    <p>依托大数据实时监测，为产业链上下游提供透明的价格参考与决策支持。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g3">🤝<span class="news-date">2026-07-30</span></div>
+                <div class="news-body">
+                    <h3>集团与某大型石化企业签署战略合作</h3>
+                    <p>双方将在原料保供、联合研发、数智化转型等领域展开深度合作。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g4">🌱<span class="news-date">2026-07-12</span></div>
+                <div class="news-body">
+                    <h3>绿色可降解塑料产线投产</h3>
+                    <p>新增 PBAT/PBS 产线，年产能 5 万吨，助力塑料行业低碳转型。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+        </div>
+
+        <div class="news-panel" id="tab2">
+            <article class="news-card">
+                <div class="news-thumb">📺<span class="news-date">2026-08-20</span></div>
+                <div class="news-body">
+                    <h3>央视财经频道专访金塑宝数智化转型</h3>
+                    <p>聚焦集团如何通过数字化平台重塑塑料产业供应链效率。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g2">📄<span class="news-date">2026-08-05</span></div>
+                <div class="news-body">
+                    <h3>《经济日报》整版报道集团绿色实践</h3>
+                    <p>深度解读金塑宝在可降解塑料与循环经济领域的创新探索。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g3">🎙️<span class="news-date">2026-07-22</span></div>
+                <div class="news-body">
+                    <h3>行业峰会：集团董事长畅谈产业未来</h3>
+                    <p>在 2026 塑料产业大会上分享"工贸数金"融合发展的金塑宝路径。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g4">🏆<span class="news-date">2026-06-18</span></div>
+                <div class="news-body">
+                    <h3>集团入选年度行业十大品牌企业</h3>
+                    <p>综合实力、创新能力与品牌影响力获行业权威机构认可。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+        </div>
+
+        <div class="news-panel" id="tab3">
+            <article class="news-card">
+                <div class="news-thumb">🔬<span class="news-date">2026-08-25</span></div>
+                <div class="news-body">
+                    <h3>专题：改性塑料的多元化应用</h3>
+                    <p>从汽车轻量化到电子电气，深度剖析改性塑料的技术演进与市场前景。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g2">♻️<span class="news-date">2026-08-10</span></div>
+                <div class="news-body">
+                    <h3>专栏：塑料循环经济实践录</h3>
+                    <p>记录集团在回收再生、可降解材料、绿色制造链条上的创新与落地。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g3">🌐<span class="news-date">2026-07-25</span></div>
+                <div class="news-body">
+                    <h3>专题：数智供应链重塑产业</h3>
+                    <p>解析金塑宝数字化平台如何让原料、制品、装备、金融高效协同。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g4">📚<span class="news-date">2026-07-05</span></div>
+                <div class="news-body">
+                    <h3>专栏：金塑宝人物故事</h3>
+                    <p>走近一线生产、仓储、研发岗位的奋斗者，听他们讲述与集团共成长的故事。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+        </div>
+
+        <div class="news-panel" id="tab4">
+            <article class="news-card">
+                <div class="news-thumb">📢<span class="news-date">2026-08-30</span></div>
+                <div class="news-body">
+                    <h3>关于 2026 年中秋节放假安排的通知</h3>
+                    <p>根据国家规定并结合集团实际，2026 年中秋节放假时间为 9 月 12 日至 14 日。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g2">📝<span class="news-date">2026-08-18</span></div>
+                <div class="news-body">
+                    <h3>2026 年秋季校园招聘正式启动</h3>
+                    <p>面向全国高校招募管培生、研发工程师、供应链专员等岗位。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g3">⚖️<span class="news-date">2026-07-28</span></div>
+                <div class="news-body">
+                    <h3>关于供应商合规合作的相关说明</h3>
+                    <p>集团持续强化供应链合规管理，欢迎优质供应商通过官方渠道对接。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+            <article class="news-card">
+                <div class="news-thumb g4">🏆<span class="news-date">2026-06-25</span></div>
+                <div class="news-body">
+                    <h3>2026 年度优秀供应商评选结果公示</h3>
+                    <p>经综合评审，共评选出年度金牌供应商 10 家、优质供应商 20 家。</p>
+                    <a href="#" class="news-link">阅读详情 →</a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- 企业文化 -->
+    <section class="testimonials" id="culture">
+        <div class="section-title reveal">
+            <span class="section-tag">企业文化</span>
+            <h2>金塑宝的价值坚守</h2>
+            <p>以使命凝聚团队，以品质赢得信赖</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card reveal">
+                <div class="culture-icon">💎</div>
+                <h3>金品质</h3>
+                <p>以"金"为标，每一批原料、每一件制品、每一次服务都经得起检验，品质是金塑宝的立身之本。</p>
+            </div>
+            <div class="testimonial-card reveal" data-delay="100">
+                <div class="culture-icon">🤝</div>
+                <h3>塑共赢</h3>
+                <p>与上下游伙伴共生共长，以诚信合作塑造产业链的共赢生态，让价值在协同中持续流动。</p>
+            </div>
+            <div class="testimonial-card reveal" data-delay="200">
+                <div class="culture-icon">🌱</div>
+                <h3>创未来</h3>
+                <p>持续投入研发与数智化，推动绿色低碳与可持续发展，以创新塑造塑料产业的美好未来。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 人才招聘 -->
+    <section class="cta" id="career">
+        <div class="section-title reveal">
+            <span class="section-tag" style="background: rgba(245, 158, 11, 0.18); color: var(--gold);">人才招聘</span>
+            <h2 style="color: white;">与金塑宝 共塑未来</h2>
+            <p style="color: rgba(255, 255, 255, 0.8);">在这里，每一份热爱都被珍视，每一次成长都被看见</p>
+        </div>
+        <div class="career-grid">
+            <div class="career-card reveal left">
+                <div class="career-icon">🎓</div>
+                <h3>校园招聘</h3>
+                <p>面向应届毕业生开设管培生、研发、供应链、职能等多类岗位，配备双导师带教、轮岗历练与清晰晋升通道。</p>
+                <div class="career-tags">
+                    <span class="career-tag">管培生</span>
+                    <span class="career-tag">研发工程师</span>
+                    <span class="career-tag">供应链专员</span>
+                </div>
+                <a href="#" class="btn btn-primary">投递简历 →</a>
+            </div>
+            <div class="career-card reveal right" data-delay="100">
+                <div class="career-icon">💼</div>
+                <h3>社会招聘</h3>
+                <p>面向有行业经验的成熟人才，提供具有竞争力的薪酬、股权激励与广阔发展空间，欢迎志同道合者加入。</p>
+                <div class="career-tags">
+                    <span class="career-tag">高级工程师</span>
+                    <span class="career-tag">区域经理</span>
+                    <span class="career-tag">数智化专家</span>
+                </div>
+                <a href="#" class="btn btn-primary">查看岗位 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系我们 -->
+    <section class="contact-section" id="contact">
+        <div class="section-title reveal">
+            <span class="section-tag">联系我们</span>
+            <h2>欢迎与金塑宝携手同行</h2>
+            <p>无论合作、咨询还是反馈，我们都将第一时间回应</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-card reveal">
+                <div class="contact-icon">📍</div>
+                <h4>集团总部</h4>
+                <p>上海市浦东新区<br>塑业大厦 18-22 层</p>
+            </div>
+            <div class="contact-card reveal" data-delay="100">
+                <div class="contact-icon">📞</div>
+                <h4>咨询热线</h4>
+                <p>400-888-XXXX<br>(工作日 9:00-18:00)</p>
+            </div>
+            <div class="contact-card reveal" data-delay="200">
+                <div class="contact-icon">✉️</div>
+                <h4>电子邮箱</h4>
+                <p>contact@jinshubao.com<br>business@jinshubao.com</p>
+            </div>
+            <div class="contact-card reveal" data-delay="300">
+                <div class="contact-icon">🏭</div>
+                <h4>生产基地</h4>
+                <p>华东 / 华南 / 华北<br>八大区域仓储中心</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo">
+                    <span class="logo-icon">金</span>
+                    金塑宝
+                </div>
+                <p>以塑为基，金质共赢。金塑宝集团致力于成为全球领先的塑料产业综合服务商，构建从原料到制品、从装备到服务的完整产业生态。</p>
+                <div class="social-links">
+                    <a href="#" aria-label="微信">💬</a>
+                    <a href="#" aria-label="微博">🌐</a>
+                    <a href="#" aria-label="抖音">📺</a>
+                    <a href="#" aria-label="领英">in</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>核心业务</h4>
+                <ul>
+                    <li><a href="#business">塑料原料贸易</a></li>
+                    <li><a href="#business">塑料制品制造</a></li>
+                    <li><a href="#business">塑料机械装备</a></li>
+                    <li><a href="#business">供应链服务</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>关于我们</h4>
+                <ul>
+                    <li><a href="#about">集团简介</a></li>
+                    <li><a href="#history">发展历程</a></li>
+                    <li><a href="#culture">企业文化</a></li>
+                    <li><a href="#news">新闻资讯</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>联系与合作</h4>
+                <ul>
+                    <li><a href="#contact">联系我们</a></li>
+                    <li><a href="#career">人才招聘</a></li>
+                    <li><a href="#">供应商合作</a></li>
+                    <li><a href="#">客户服务</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 金塑宝集团 Jinshubao Group. 保留所有权利. | 沪ICP备2026000001号
+        </div>
+    </footer>
+
+    <script>
+        // ============================================
+        // 视口动画核心：进入视口触发，离开视口重置，再次进入重新触发
+        // ============================================
+        const revealElements = document.querySelectorAll('.reveal');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+
+                    if (entry.target.classList.contains('stat-item')) {
+                        animateNumber(entry.target);
+                    }
+                } else {
+                    entry.target.classList.remove('visible');
+
+                    if (entry.target.classList.contains('stat-item')) {
+                        const numEl = entry.target.querySelector('.stat-number');
+                        if (numEl) numEl.textContent = '0';
+                    }
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px'
+        });
+
+        revealElements.forEach(el => observer.observe(el));
+
+        // 数字滚动动画
+        function animateNumber(item) {
+            const numEl = item.querySelector('.stat-number');
+            if (!numEl) return;
+            const target = parseFloat(numEl.dataset.target);
+            const suffix = numEl.dataset.suffix || '';
+            const duration = 2000;
+            const startTime = performance.now();
+            const isFloat = target % 1 !== 0;
+
+            function update(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                const current = target * eased;
+                numEl.textContent = (isFloat ? current.toFixed(1) : Math.floor(current).toLocaleString()) + suffix;
+                if (progress < 1) requestAnimationFrame(update);
+                else numEl.textContent = (isFloat ? target.toFixed(1) : Math.floor(target).toLocaleString()) + suffix;
+            }
+            requestAnimationFrame(update);
+        }
+
+        // ============================================
+        // 导航栏滚动效果 + 滚动联动高亮
+        // 算法：找到"顶部已经被滚过去的最后一个 section"作为高亮项
+        // ============================================
+        const navbar = document.getElementById('navbar');
+        const navLinks = document.querySelectorAll('.nav-links a, .mobile-nav-links a');
+        // 仅用有对应导航链接的 section 参与高亮计算
+        // 避免滚动经过 history/culture 等"中间 section"时丢失高亮
+        const navLinkHrefs = new Set(Array.from(navLinks).map(a => a.getAttribute('href')));
+        const sections = Array.from(document.querySelectorAll('section[id]'))
+            .filter(s => navLinkHrefs.has('#' + s.id));
+        let currentActiveId = null;
+
+        let sectionOffsets = [];
+        function cacheSectionOffsets() {
+            sectionOffsets = sections.map(s => ({
+                id: s.id,
+                top: s.offsetTop,
+                bottom: s.offsetTop + s.offsetHeight
+            }));
+        }
+
+        function updateNav() {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+
+            const NAV_OFFSET = 67;
+            const triggerLine = window.scrollY + NAV_OFFSET;
+
+            let activeId = null;
+            for (let i = sectionOffsets.length - 1; i >= 0; i--) {
+                if (triggerLine >= sectionOffsets[i].top) {
+                    activeId = sectionOffsets[i].id;
+                    break;
+                }
+            }
+
+            const atDocBottom = window.scrollY + window.innerHeight
+                >= document.documentElement.scrollHeight - 5;
+            if (atDocBottom && sectionOffsets.length > 0) {
+                activeId = sectionOffsets[sectionOffsets.length - 1].id;
+            }
+
+            if (!activeId && sectionOffsets.length > 0) {
+                activeId = sectionOffsets[0].id;
+            }
+
+            if (activeId && activeId !== currentActiveId) {
+                currentActiveId = activeId;
+                const activeHref = '#' + activeId;
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === activeHref);
+                });
+            }
+        }
+
+        cacheSectionOffsets();
+        // ============================================
+        // 首屏视频动态尺寸（与象屿 bannervideo 同一公式，已用其线上数据验证）
+        // 规则：
+        //   1. cover 缩放：scale = max(视口宽/视频宽, 视口高/视频高)，始终占满一屏
+        //   2. 宽度溢出 → margin-left 负值水平居中（象屿首次抓取数据的行为）
+        //   3. 高度溢出 → margin-top 负值底部对齐（象屿二次抓取数据的行为）：
+        //      溢出全部推到顶部，底部字幕/标题完整可见
+        // 验证：视口 1939.2×620.19、视频 16:9 时，本公式输出
+        //   width:1939.2px; height:1090.8px; margin-top:-470.61px
+        // 与象屿线上运行时样式逐位一致。
+        // 元数据未就绪时由 CSS（100% + object-fit:cover + bottom）兜底。
+        // ============================================
+        const bannerVideo = document.getElementById('bannervideo');
+
+        function resizeBannerVideo() {
+            if (!bannerVideo) return;
+            const hero = bannerVideo.parentElement;
+            const vw = hero.clientWidth;
+            const vh = hero.clientHeight;
+            // 视频原生分辨率（loadedmetadata 后才有值）
+            const vnw = bannerVideo.videoWidth;
+            const vnh = bannerVideo.videoHeight;
+            if (!vnw || !vnh) return; // 元数据未就绪，交由 CSS 兜底
+
+            // cover 缩放：取较大比例，保证宽高同时盖住容器（始终占满一屏）
+            const scale = Math.max(vw / vnw, vh / vnh);
+            const dw = vnw * scale;
+            const dh = vnh * scale;
+
+            bannerVideo.style.width = dw + 'px';
+            bannerVideo.style.height = dh + 'px';
+            // 水平居中：左右对称裁切
+            bannerVideo.style.marginLeft = ((vw - dw) / 2) + 'px';
+            // 垂直底部对齐：底边贴住容器底边，溢出全部留在顶部
+            bannerVideo.style.marginTop = (vh - dh) + 'px';
+        }
+
+        if (bannerVideo) {
+            // 元数据就绪（拿到视频原生分辨率）后首次计算
+            bannerVideo.addEventListener('loadedmetadata', resizeBannerVideo);
+            // 兜底：元数据已缓存时 loadedmetadata 不再触发，直接尝试一次
+            resizeBannerVideo();
+            // hero 尺寸变化（窗口缩放、移动端地址栏伸缩、横竖屏旋转）时重算
+            if (window.ResizeObserver) {
+                new ResizeObserver(resizeBannerVideo).observe(bannerVideo.parentElement);
+            }
+        }
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                cacheSectionOffsets();
+                resizeBannerVideo(); // ResizeObserver 不可用时的兜底重算
+                updateNav();
+                if (window.innerWidth > 768) closeMobileMenu();
+            }, 200);
+        });
+
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    updateNav();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        // ============================================
+        // 新闻资讯 tab 切换
+        // ============================================
+        const newsTabs = document.querySelectorAll('.news-tab');
+        const newsPanels = document.querySelectorAll('.news-panel');
+
+        newsTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                newsTabs.forEach(t => t.classList.toggle('active', t === tab));
+                newsPanels.forEach(p => p.classList.toggle('active', p.id === targetTab));
+            });
+        });
+
+        // ============================================
+        // 移动端汉堡菜单
+        // ============================================
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        function openMobileMenu() {
+            menuToggle.classList.add('active');
+            mobileMenu.classList.add('open');
+            menuOverlay.classList.add('open');
+            document.body.classList.add('menu-open');
+            menuToggle.setAttribute('aria-expanded', 'true');
+            mobileMenu.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeMobileMenu() {
+            menuToggle.classList.remove('active');
+            mobileMenu.classList.remove('open');
+            menuOverlay.classList.remove('open');
+            document.body.classList.remove('menu-open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            mobileMenu.setAttribute('aria-hidden', 'true');
+        }
+
+        function toggleMobileMenu() {
+            if (mobileMenu.classList.contains('open')) closeMobileMenu();
+            else openMobileMenu();
+        }
+
+        menuToggle.addEventListener('click', toggleMobileMenu);
+        menuOverlay.addEventListener('click', closeMobileMenu);
+
+        document.querySelectorAll('.mobile-nav-links a, .mobile-menu-cta .btn').forEach(el => {
+            el.addEventListener('click', closeMobileMenu);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                closeMobileMenu();
+            }
+        });
+
+        // 初始化
+        updateNav();
+    </script>
+</body>
+</html>

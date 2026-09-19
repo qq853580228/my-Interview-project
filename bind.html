@@ -19,7 +19,7 @@
       console.log(this);
       console.log(a, b, c);
     }
-    const fn1 = fn.bind1({ x: 100 }, 10);
+    const fn1 = fn.bind1({ x: 100 }, 100, 200, 300);
     console.log(fn1());
 
 
@@ -37,7 +37,8 @@
       delete obj.fn
       return res
     }
-    // fnn.myApply({ name: 'bls' }, [10, 20])
+    // fn.myApply({ name: 'bls' }, [10, 20, 30]);
+    fn.myCall({ name: 'bls' }, 10, 20, 30);
 
     // async function async1() {
     //   console.log('async1 start');

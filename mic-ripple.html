@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>会议麦克风水波纹</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;
+  background:#0f1722;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.mic-wrap{
+  position:relative;
+  width:160px;
+  height:160px;
+  cursor:pointer;
+}
+/* 画布放在底层，画波纹 */
+#waveCanvas{
+  position:absolute;
+  left:0;top:0;
+  width:160px;height:160px;
+}
+.mic-icon{
+  position:absolute;
+  z-index:2;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  width:64px;height:64px;
+  color:#40a9ff;
+}
+.tip{
+  position:absolute;
+  bottom:-40px;
+  left:50%;
+  transform:translateX(-50%);
+  color:#999;
+  font-size:14px;
+  white-space:nowrap;
+}
+</style>
+</head>
+<body>
+<div class="mic-wrap" id="micWrap">
+  <canvas id="waveCanvas"></canvas>
+  <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+    <path d="M5 10a7 7 0 0 0 14 0"></path>
+    <line x1="12" y1="17" x2="12" y2="22"></line>
+    <line x1="8" y1="22" x2="16" y2="22"></line>
+  </svg>
+  <div class="tip">点击开启麦克风</div>
+</div>
+
+<script>
+const canvas = document.getElementById('waveCanvas');
+const ctx = canvas.getContext('2d');
+const micWrap = document.getElementById('micWrap');
+canvas.width = 160;
+canvas.height = 160;
+
+let audioContext = null;
+let analyser = null;
+let stream = null;
+let rafId = null;
+let dataArray;
+// 音量 0~1
+let volume = 0;
+// 平滑，防止剧烈抖动
+let targetVolume = 0;
+const SENSITIVITY = 40;
+
+async function startMic(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.8;
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    drawLoop();
+  }catch(e){
+    alert('麦克风授权失败：' + e.message);
+  }
+}
+function stopMic(){
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  if(audioContext) audioContext.close();
+  cancelAnimationFrame(rafId);
+  audioContext = null;
+  analyser = null;
+  volume = 0;
+  targetVolume = 0;
+}
+
+// 主渲染循环
+function drawLoop(){
+  rafId = requestAnimationFrame(drawLoop);
+  if(!analyser){
+    // 未开启麦克风，清空画布
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    return;
+  }
+  analyser.getByteFrequencyData(dataArray);
+  const avg = dataArray.reduce((s,v)=>s+v,0)/dataArray.length;
+  targetVolume = Math.max(0, (avg - SENSITIVITY)/100);
+  // 平滑过渡
+  volume += (targetVolume - volume) * 0.12;
+
+  // 清空画布
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const cx = canvas.width/2;
+  const cy = canvas.height/2;
+  // 3层同心圆，视频会议经典三层波纹
+  const count = 3;
+  for(let i=0;i<count;i++){
+    // 每层半径错开，叠加音量
+    const baseR = 40 + i * 22;
+    const r = baseR + volume * 45;
+    const opacity = Math.max(0, 0.65 - i*0.18) * Math.min(1, volume*1.4);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(64,169,255,${opacity})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+micWrap.onclick = ()=>{
+  if(!audioContext){
+    startMic();
+  }else{
+    stopMic();
+  }
+}
+window.onbeforeunload = stopMic;
+</script>
+</body>
+</html>

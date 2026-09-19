@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书 - 你的生活指南</title>
+    <style>
+        :root {
+            --brand: #ff2442;
+            --text: #333;
+            --sub: #999;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            color: var(--text);
+            background: #fff;
+        }
+
+        /* ===== 顶部导航 ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #fff;
+            transition: box-shadow .3s;
+        }
+        .topbar.scrolled { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            height: 60px;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .logo-box {
+            background: var(--brand);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .search {
+            flex: 1;
+            max-width: 520px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bbb;
+            pointer-events: none;
+        }
+        .search input {
+            width: 100%;
+            height: 36px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: #f5f5f5;
+            padding: 0 14px 0 36px;
+            font-size: 14px;
+            outline: none;
+            transition: .25s;
+        }
+        .search input:focus { background: #fff; border-color: var(--brand); }
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-shrink: 0;
+        }
+        .btn-publish {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--brand);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: filter .2s;
+        }
+        .btn-publish:hover { filter: brightness(1.08); }
+        .icon-btn {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #555;
+            transition: background .2s;
+        }
+        .icon-btn:hover { background: #f5f5f5; }
+        .icon-btn .dot::after {
+            content: "";
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--brand);
+            border: 1.5px solid #fff;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ffd3c0, #ff8a65);
+            flex-shrink: 0;
+        }
+
+        /* ===== 分类标签 ===== */
+        .cats {
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+            background: #fff;
+        }
+        .cats-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 46px;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .cats-inner::-webkit-scrollbar { display: none; }
+        .cat {
+            padding: 5px 14px;
+            border-radius: 16px;
+            font-size: 15px;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            position: relative;
+            transition: color .2s;
+        }
+        .cat:hover { color: var(--text); }
+        .cat.active { color: var(--brand); font-weight: 700; }
+        .cat.active::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -4px;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--brand);
+        }
+
+        /* ===== 虚拟瀑布流 ===== */
+        .viewport {
+            max-width: 1440px;
+            margin: 18px auto 0;
+            padding: 0 24px;
+        }
+        .canvas { position: relative; }
+        .card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            opacity: 0;
+            transition: opacity .45s ease, box-shadow .25s;
+            will-change: transform;
+        }
+        .card.visible { opacity: 1; }
+        .card.visible:hover { box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+        .cover {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background: #f2f2f2;
+        }
+        /* 图片加载前呼吸占位 */
+        .cover::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, #f5f5f5 40%, #fafafa 50%, #f5f5f5 60%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+        .cover.loaded::before { display: none; }
+        .cover img {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity .4s, transform .4s;
+        }
+        .cover.loaded img { opacity: 1; }
+        .card:hover .cover img { transform: scale(1.05); }
+        .card-body { padding: 10px 12px 12px; }
+        .title {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: var(--text);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 42px;
+        }
+        .meta {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .author-ava {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+        .author {
+            flex: 1;
+            font-size: 12px;
+            color: var(--sub);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .like {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 12px;
+            color: #666;
+            padding: 3px 6px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            transition: color .2s, background .2s;
+        }
+        .like:hover { background: #f7f7f7; }
+        .like svg { fill: none; stroke: currentColor; transition: .2s; }
+        .like.liked { color: var(--brand); }
+        .like.liked svg { fill: var(--brand); stroke: var(--brand); }
+
+        .empty {
+            text-align: center;
+            color: var(--sub);
+            padding: 90px 0;
+        }
+        .empty .face { font-size: 44px; margin-bottom: 12px; }
+
+        .footer {
+            text-align: center;
+            color: #bbb;
+            font-size: 12px;
+            padding: 40px 0 60px;
+        }
+
+        /* ===== 回到顶部 ===== */
+        .back-top {
+            position: fixed;
+            right: 24px;
+            bottom: 48px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 14px rgba(0,0,0,.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #666;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: .3s;
+            z-index: 90;
+        }
+        .back-top.show { opacity: 1; visibility: visible; transform: none; }
+        .back-top:hover { color: var(--brand); }
+
+        /* ===== 小屏适配 ===== */
+        @media (max-width: 768px) {
+            .topbar-inner { gap: 12px; padding: 0 16px; }
+            .cats-inner {
+                justify-content: flex-start;   /* 横滑容器不能居中，否则开头标签被裁且滚不到 */
+                padding: 0 16px;
+                gap: 4px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .cat { padding: 4px 11px; font-size: 14px; }
+            /* 右侧渐隐遮罩，提示标签条可以横向滑动（仅可滚动时由 JS 加 is-scrollable 类显示） */
+            .cats.is-scrollable::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 32px;
+                background: linear-gradient(to right, rgba(255,255,255,0), #fff 90%);
+                pointer-events: none;
+                z-index: 1;
+            }
+            .viewport { padding: 0 16px; }
+            .actions { gap: 10px; }
+            /* 小屏搜索框占满整行：去掉桌面端用于居中的 auto margin，
+               否则 auto margin 会吃掉 flex 剩余空间，把搜索框压到最小宽度 */
+            .search { max-width: none; margin: 0; }
+        }
+        @media (max-width: 480px) {
+            .topbar-inner { gap: 8px; padding: 0 12px; height: 54px; }
+            .cats { top: 54px; }
+            .cats-inner { padding: 0 12px; }
+            .viewport { padding: 0 12px; }
+            .logo-box { font-size: 14px; letter-spacing: 1px; padding: 3px 8px; border-radius: 6px; }
+            /* 低优先级操作收起：铃铛隐藏，发布按钮收成圆形 + 号 */
+            .actions .icon-btn { display: none; }
+            .btn-publish {
+                width: 36px;
+                height: 36px;
+                padding: 0;
+                border-radius: 50%;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            .btn-publish span { display: none; }
+            .back-top { right: 14px; bottom: 32px; width: 40px; height: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <header class="topbar" id="topbar">
+        <div class="topbar-inner">
+            <div class="logo-box">小红书</div>
+            <div class="search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+                <input type="text" id="searchInput" placeholder="搜索小红书">
+            </div>
+            <div class="actions">
+                <button class="btn-publish">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>发布</span>
+                </button>
+                <div class="icon-btn dot" title="通知">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                </div>
+                <div class="avatar" title="我">😊</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 分类标签 -->
+    <nav class="cats">
+        <div class="cats-inner" id="cats"></div>
+    </nav>
+
+    <!-- 虚拟瀑布流：canvas 高度由 JS 撑开，卡片绝对定位按需挂载 -->
+    <main class="viewport">
+        <div class="canvas" id="canvas"></div>
+    </main>
+
+    <footer class="footer" id="footer">© 2026 小红书 Demo · 仅供学习交流</footer>
+
+    <!-- 回到顶部 -->
+    <div class="back-top" id="backTop" title="回到顶部">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </div>
+
+<script>
+    // ===== 图片生成 =====
+    const SIZES = {
+        square: [1, 1],
+        portrait_4_3: [3, 4],
+        portrait_16_9: [9, 16],
+        landscape_4_3: [4, 3],
+        landscape_16_9: [16, 9]
+    };
+    const IMG = (prompt, size) =>
+        `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(prompt)}&image_size=${size}`;
+
+    // ===== 基础数据池（无限滚动时循环复用生成模拟数据） =====
+    const DATA = [
+        { t: "找到了！！约会必去的草莓蛋糕店🍓", a: "干饭小航", e: "🍰", g: "linear-gradient(135deg,#ffb199,#ff0844)", likes: 2314, c: "美食", p: "strawberry cream birthday cake on ceramic plate, soft window light, food photography, shallow depth of field", s: "portrait_4_3" },
+        { t: "杭州周末两日游攻略，一张图看懂📚", a: "旅行日记", e: "🧳", g: "linear-gradient(135deg,#a1c4fd,#c2e9fb)", likes: 1892, c: "旅行", p: "West Lake in Hangzhou with ancient pagoda and lotus, misty morning, chinese landscape photography", s: "landscape_16_9" },
+        { t: "秋天的第一套穿搭|针织衫+半身裙好温柔🧡", a: "阿霓的衣柜", e: "👗", g: "linear-gradient(135deg,#fbc2eb,#a6c1ee)", likes: 3120, c: "穿搭", p: "autumn knit sweater outfit flatlay with coffee and scarf, warm tones, fashion photography", s: "portrait_16_9" },
+        { t: "新手日常淡妆教程，10分钟出门✨", a: "一杯奶茶兔", e: "🐰", g: "linear-gradient(135deg,#ffdde1,#ee9ca7)", likes: 1547, c: "美妆", p: "gradient eyeshadow makeup close up on young woman, beauty photography, studio light", s: "portrait_4_3" },
+        { t: "终于拥有梦想中的奶油风客厅🛋️", a: "胖胖的装修日记", e: "🏠", g: "linear-gradient(135deg,#d4fc79,#96e6a1)", likes: 4205, c: "家居", p: "cozy modern living room with cream sofa and green plants, interior design photography, bright", s: "square" },
+        { t: "柯基的微笑治愈了我的周一emo🐶", a: "柯基在吃饭", e: "🐕", g: "linear-gradient(135deg,#f6d365,#fda085)", likes: 5688, c: "宠物", p: "corgi dog smiling in park at golden hour, pet photography, warm sunlight", s: "portrait_4_3" },
+        { t: "晨间瑜伽30天，身体变化太明显了🧘‍♀️", a: "瑜伽娟姐", e: "🧘", g: "linear-gradient(135deg,#84fab0,#8fd3f4)", likes: 987, c: "健身", p: "woman doing yoga at sunrise by large window, fitness photography, warm light", s: "portrait_16_9" },
+        { t: "重庆火锅攻略|好吃到跺脚的一家🥘", a: "重庆火锅帮", e: "🌶️", g: "linear-gradient(135deg,#ff9a9e,#f5576c)", likes: 3321, c: "美食", p: "spicy sichuan hotpot bubbling with ingredients, overhead food photography, steam", s: "square" },
+        { t: "鼓浪屿一日游路线，不走回头路✔️", a: "摄影师小何", e: "📷", g: "linear-gradient(135deg,#89f7fe,#66a6ff)", likes: 1764, c: "旅行", p: "gulangyu island Xiamen seaside colonial buildings, travel photography, blue sky", s: "portrait_4_3" },
+        { t: "重庆的夜景也太被低估了吧！！🌃", a: "摄影师小何", e: "📷", g: "linear-gradient(135deg,#89f7fe,#66a6ff)", likes: 2653, c: "旅行", p: "chongqing city night view with neon lights and river, cyberpunk photography", s: "landscape_4_3" },
+        { t: "人生第一只大牌包包开箱📦", a: "包包收集家", e: "👜", g: "linear-gradient(135deg,#e0c3fc,#8ec5fc)", likes: 4390, c: "穿搭", p: "luxury designer handbag on marble table, product photography, soft light", s: "square" },
+        { t: "减脂期5分钟早餐碗，饱腹不长胖🥣", a: "养生小薇", e: "🥗", g: "linear-gradient(135deg,#a8edea,#fed6e3)", likes: 1210, c: "美食", p: "healthy breakfast bowl with fruits yogurt and granola, top view food photography, bright", s: "portrait_4_3" },
+        { t: "三亚旅游保姆级攻略|防晒+行程都在这🌴", a: "海边冲浪狗", e: "🏄", g: "linear-gradient(135deg,#4facfe,#00f2fe)", likes: 2977, c: "旅行", p: "sanya beach with palm trees and turquoise water, tropical travel photography", s: "portrait_16_9" },
+        { t: "新家办公桌布置完成，效率翻倍💻", a: "数码生活家", e: "💡", g: "linear-gradient(135deg,#cfd9df,#e2ebf0)", likes: 1452, c: "家居", p: "minimalist white desk setup with monitor and lamp, home office interior photography", s: "landscape_4_3" },
+        { t: "我家猫的睡姿大赏，谁能懂😭", a: "猫奴一只", e: "🐈", g: "linear-gradient(135deg,#fddb92,#d1fdff)", likes: 6720, c: "宠物", p: "cute british shorthair cat sleeping on blanket, pet photography, soft light", s: "portrait_4_3" },
+        { t: "秋冬美甲|奶茶色小花好温柔💅", a: "美甲师Anna", e: "💅", g: "linear-gradient(135deg,#fbc2eb,#fdcbf1)", likes: 2033, c: "美妆", p: "manicured nails with flower nail art holding coffee cup, beauty photography", s: "square" },
+        { t: "自制红糖珍珠奶茶，一次就成功🧋", a: "烘焙日记", e: "🧁", g: "linear-gradient(135deg,#f6d365,#fda085)", likes: 1846, c: "美食", p: "iced brown sugar boba milk tea with pearls, drink photography, bright background", s: "portrait_16_9" },
+        { t: "稻城亚丁，人间的童话世界🏔️", a: "徒步阿岳", e: "🏔️", g: "linear-gradient(135deg,#c2e9fb,#a1c4fd)", likes: 3518, c: "旅行", p: "daocheng yading snow mountains with prayer flags, tibet travel photography, dramatic sky", s: "portrait_4_3" }
+    ];
+    const CATS = ["推荐", "穿搭", "美食", "美妆", "旅行", "家居", "宠物", "健身"];
+
+    // ===== 常量 =====
+    const GAP_X = 16;        // 列间距
+    const GAP_Y = 16;        // 行间距
+    const TEXT_H = 98;       // 卡片文案区估算高度
+    const OVERSCAN = 500;    // 可视区上下预渲染缓冲
+    const BATCH = 24;        // 每次滚动加载的条数
+    const LOAD_AHEAD = 800;  // 距底部多少 px 时触发预加载
+
+    // ===== DOM 引用 =====
+    const canvas = document.getElementById("canvas");
+    const catsBox = document.getElementById("cats");
+    const searchInput = document.getElementById("searchInput");
+    const backTop = document.getElementById("backTop");
+    const topbar = document.getElementById("topbar");
+
+    // ===== 虚拟列表状态 =====
+    let cols = 0, colW = 0, canvasTop = 0, maxCardH = 0;
+    let colHeights = [];                 // 每列累计高度
+    const positions = new Map();         // uid -> {x, y, h}
+    let ySorted = [];                    // 按 y 排序的 uid（用于二分查找可视区）
+    let totalHeight = 0;
+    let items = [];                      // 当前数据集（随滚动增长）
+    const itemMap = new Map();           // uid -> item
+    const mounted = new Map();           // uid -> 已挂载的 DOM
+    const everShown = new Set();         // 已展示过的 uid（保证入场动画只播一次）
+    let uidSeq = 0;
+    let currentTab = "推荐", query = "";
+    let matchIdx = [], cursor = 0, hasMore = true;
+
+    // ===== 生成模拟数据 =====
+    function matches(b) {
+        return (currentTab === "推荐" || b.c === currentTab) &&
+            (!query || b.t.includes(query) || b.a.includes(query) || b.c.includes(query));
+    }
+    function makeCard(base) {
+        const card = { ...base, uid: uidSeq++, liked: false, likes: base.likes + (uidSeq * 37) % 400 };
+        itemMap.set(card.uid, card);
+        return card;
+    }
+    // 追加一批：从匹配的基础池中循环取数据
+    function loadMore() {
+        if (!matchIdx.length) { hasMore = false; return; }
+        const batch = [];
+        for (let n = 0; n < BATCH; n++) {
+            batch.push(makeCard(DATA[matchIdx[cursor++ % matchIdx.length]]));
+        }
+        items.push(...batch);
+        for (const it of batch) placeCard(it);
+        updateHeight();
+        ySorted = ySorted.concat(batch.map(it => it.uid))
+            .sort((a, b) => positions.get(a).y - positions.get(b).y);
+    }
+
+    // ===== 布局：最短列放置（真实小红书算法，卡片自左向右流动铺开） =====
+    function placeCard(it) {
+        let c = 0;
+        for (let k = 1; k < cols; k++) if (colHeights[k] < colHeights[c]) c = k;
+        const [w, h] = SIZES[it.s];
+        const cardH = Math.round(colW * h / w) + TEXT_H;
+        positions.set(it.uid, { x: Math.floor(c * (colW + GAP_X)), y: colHeights[c], h: cardH });
+        colHeights[c] += cardH + GAP_Y;
+    }
+    function updateHeight() {
+        totalHeight = Math.max(...colHeights, 0);
+        canvas.style.height = totalHeight + "px";
+    }
+    function initLayout() {
+        cols = getCols();
+        // 注意：必须用 canvas.clientWidth（位于 .viewport 的 padding 内侧），
+        // 用父容器 clientWidth 会把左右 padding 算进去，导致最右列溢出、页面出现横向滚动条
+        colW = Math.floor((canvas.clientWidth - GAP_X * (cols - 1)) / cols);
+        maxCardH = colW * 16 / 9 + TEXT_H;
+        canvasTop = canvas.offsetTop;
+    }
+    // 尺寸变化 / 筛选切换：全部重排
+    function relayout() {
+        initLayout();
+        colHeights = new Array(cols).fill(0);
+        positions.clear();
+        for (const it of items) placeCard(it);
+        updateHeight();
+        ySorted = items.map(it => it.uid).sort((a, b) => positions.get(a).y - positions.get(b).y);
+        clearMounted();
+        renderWindow();
+        // 分类条仅在内容溢出可横滑时才显示右侧渐隐遮罩
+        catsBox.parentElement.classList.toggle("is-scrollable", catsBox.scrollWidth > catsBox.clientWidth + 1);
+    }
+
+    // ===== 虚拟渲染：只挂载可视区 ± OVERSCAN 内的卡片 =====
+    function renderWindow() {
+        if (!items.length) return;
+        const minY = window.scrollY - canvasTop - maxCardH - OVERSCAN;
+        const maxY = window.scrollY + window.innerHeight - canvasTop + OVERSCAN;
+
+        // 二分定位第一个可能可见的卡片
+        let lo = 0, hi = ySorted.length;
+        while (lo < hi) {
+            const m = (lo + hi) >> 1;
+            if (positions.get(ySorted[m]).y < minY) lo = m + 1; else hi = m;
+        }
+
+        const needed = new Set(), add = [];
+        for (let i = lo; i < ySorted.length; i++) {
+            const uid = ySorted[i], p = positions.get(uid);
+            if (p.y >= maxY) break;               // y 有序，后面全部不可见
+            if (p.y + p.h < minY) continue;       // 高卡片从上方探入的情况
+            needed.add(uid);
+            if (!mounted.has(uid)) add.push(uid);
+        }
+
+        // 卸载不在窗口内的卡片（diff，最小化 DOM 操作）
+        for (const [uid, el] of mounted) {
+            if (!needed.has(uid)) { el.remove(); mounted.delete(uid); }
+        }
+
+        // 挂载新卡片
+        if (add.length) {
+            const frag = document.createDocumentFragment();
+            for (const uid of add) {
+                const el = buildCard(itemMap.get(uid));
+                const p = positions.get(uid);
+                el.style.width = colW + "px";
+                el.style.transform = `translate3d(${p.x}px,${p.y}px,0)`;
+                frag.appendChild(el);
+                mounted.set(uid, el);
+                if (everShown.has(uid)) {
+                    el.classList.add("visible");
+                } else {
+                    everShown.add(uid);
+                    requestAnimationFrame(() => el.classList.add("visible"));
+                }
+            }
+            canvas.appendChild(frag);
+        }
+    }
+
+    function buildCard(item) {
+        const [w, h] = SIZES[item.s];
+        const el = document.createElement("div");
+        el.className = "card";
+        el.dataset.uid = item.uid;
+        el.innerHTML = `
+            <div class="cover" style="aspect-ratio:${w}/${h}">
+                <img src="${IMG(item.p, item.s)}" alt="${item.t}" decoding="async">
+            </div>
+            <div class="card-body">
+                <div class="title">${item.t}</div>
+                <div class="meta">
+                    <div class="author-ava" style="background:${item.g}">${item.e}</div>
+                    <div class="author">${item.a}</div>
+                    <div class="like${item.liked ? " liked" : ""}" data-uid="${item.uid}">
+                        <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                        <span>${item.likes}</span>
+                    </div>
+                </div>
+            </div>`;
+        return el;
+    }
+
+    function clearMounted() {
+        for (const el of mounted.values()) el.remove();
+        mounted.clear();
+    }
+
+    // ===== 重置数据并渲染（切换分类 / 搜索） =====
+    function rebuild() {
+        query = searchInput.value.trim();
+        matchIdx = DATA.map((b, i) => i).filter(i => matches(DATA[i]));
+        cursor = 0; uidSeq = 0; hasMore = true;
+        items = []; itemMap.clear(); positions.clear();
+        ySorted = []; clearMounted();
+
+        if (!matchIdx.length) {
+            canvas.style.height = "auto";
+            canvas.innerHTML = `<div class="empty"><div class="face">🔍</div>没有找到相关笔记，换个关键词试试吧</div>`;
+            return;
+        }
+        canvas.innerHTML = "";
+        relayout();
+        // 保证首屏填满（数据不足时继续加载）
+        let guard = 0;
+        while (hasMore && canvasTop + totalHeight < window.innerHeight + OVERSCAN && guard++ < 12) {
+            loadMore();
+            renderWindow();
+        }
+    }
+
+    // ===== 渲染分类标签 =====
+    function renderCats() {
+        catsBox.innerHTML = CATS.map(c =>
+            `<div class="cat${c === currentTab ? " active" : ""}" data-cat="${c}">${c}</div>`
+        ).join("");
+    }
+
+    function getCols() {
+        const w = window.innerWidth;
+        if (w >= 1500) return 6;
+        if (w >= 1200) return 5;
+        if (w >= 900) return 4;
+        if (w >= 600) return 3;
+        return 2;
+    }
+
+    // ===== 事件：分类切换（委托） =====
+    catsBox.addEventListener("click", e => {
+        const cat = e.target.closest(".cat");
+        if (!cat || cat.dataset.cat === currentTab) return;
+        currentTab = cat.dataset.cat;
+        renderCats();
+        // 横滑容器中把激活标签滚到中间（block:nearest 避免垂直方向跳动）
+        catsBox.querySelector(".cat.active")
+            ?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        rebuild();
+        window.scrollTo({ top: 0 });
+    });
+
+    // ===== 事件：点赞（委托） =====
+    canvas.addEventListener("click", e => {
+        const like = e.target.closest(".like");
+        if (!like) return;
+        const item = itemMap.get(+like.dataset.uid);
+        if (!item) return;
+        item.liked = !item.liked;
+        item.likes += item.liked ? 1 : -1;
+        like.classList.toggle("liked", item.liked);
+        like.querySelector("span").textContent = item.likes;
+    });
+
+    // ===== 事件：图片加载完成（capture 捕获 load） =====
+    canvas.addEventListener("load", e => {
+        if (e.target.tagName === "IMG") e.target.closest(".cover")?.classList.add("loaded");
+    }, true);
+
+    // ===== 事件：搜索 =====
+    searchInput.addEventListener("keydown", e => {
+        if (e.key !== "Enter") return;
+        rebuild();
+        window.scrollTo({ top: 0 });
+    });
+
+    // ===== 滚动：虚拟渲染 + 无限加载 + 导航阴影（rAF 节流） =====
+    let ticking = false;
+    window.addEventListener("scroll", () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const st = window.scrollY;
+            topbar.classList.toggle("scrolled", st > 4);
+            backTop.classList.toggle("show", st > 400);
+            // 距底部不足 LOAD_AHEAD 时追加一批模拟数据
+            if (items.length && hasMore && st + window.innerHeight > canvasTop + totalHeight - LOAD_AHEAD) {
+                loadMore();
+            }
+            renderWindow();
+            ticking = false;
+        });
+    });
+    backTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+    // ===== 窗口变化：重排（防抖） =====
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(relayout, 200);
+    });
+
+    // ===== 初始化 =====
+    renderCats();
+    rebuild();
+</script>
+</body>
+</html>

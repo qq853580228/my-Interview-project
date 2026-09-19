@@ -1,58 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>H5 下拉刷新 &amp; 上拉加载更多</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      overscroll-behavior: none; /* 阻止安卓 Chrome 下拉刷新整页 */
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: #f5f6f8;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .page { display: flex; flex-direction: column; height: 100%; }
+
+    .header {
+      flex: 0 0 48px;
+      height: 48px;
+      line-height: 48px;
+      text-align: center;
+      background: #3b82f6;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      z-index: 10;
+    }
+
+    /* 滚动容器：所有下拉/触底判断都基于它 */
+    .scroll-wrapper {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain; /* 到边界时不把滚动传递给页面 */
+    }
+    .content { position: relative; }
+
+    /* 下拉指示器：默认藏在容器顶部之外（-60px），靠 content translateY 露出 */
+    .pull-indicator {
+      height: 60px;
+      margin-top: -60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #8a8f99;
+      font-size: 13px;
+    }
+    .pull-icon {
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      font-size: 16px;
+      color: #3b82f6;
+      transition: transform .2s ease;
+    }
+    .pull-icon.rotate { transform: rotate(180deg); }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #d7dbe0;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .list { list-style: none; padding: 10px 12px; }
+    .list li {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      color: #333;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .list li .no { color: #9aa0a8; font-size: 13px; }
+
+    .load-status {
+      text-align: center;
+      padding: 16px 0 28px;
+      color: #9aa0a8;
+      font-size: 13px;
+    }
+  </style>
 </head>
 <body>
-  <p class="refreshText"></p >
-  <ul id="refreshContainer">
-    <li>111</li>
-    <li>222</li>
-    <li>333</li>
-    <li>444</li>
-    <li>555</li>
-    ...
-  </ul>
+  <div class="page">
+    <header class="header">消息列表</header>
+    <div class="scroll-wrapper" id="scrollWrapper">
+      <div class="content" id="content">
+        <div class="pull-indicator" id="pullIndicator">
+          <span class="spinner" id="spinner" hidden></span>
+          <span class="pull-icon" id="pullIcon">↓</span>
+          <span class="pull-text" id="pullText">下拉刷新</span>
+        </div>
+        <ul class="list" id="list"></ul>
+        <div class="load-status" id="loadStatus">加载中...</div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    var _element = document.getElementById('refreshContainer'),
-    _refreshText = document.querySelector('.refreshText'),
-    _startPos = 0,  // 初始的值
-    _transitionHeight = 0; // 移动的距离
+  (function () {
+    'use strict';
 
-    _element.addEventListener('touchstart', function(e) {
-        _startPos = e.touches[0].pageY; // 记录初始位置
-        _element.style.position = 'relative';
-        _element.style.transition = 'transform 0s';
-    }, false);
+    /* ========== DOM ========== */
+    var wrapper   = document.getElementById('scrollWrapper');
+    var content   = document.getElementById('content');
+    var listEl    = document.getElementById('list');
+    var indicator = document.getElementById('pullIndicator');
+    var pullIcon  = document.getElementById('pullIcon');
+    var pullText  = document.getElementById('pullText');
+    var spinner   = document.getElementById('spinner');
+    var loadStatus = document.getElementById('loadStatus');
 
-    _element.addEventListener('touchmove', function(e) {
-        // e.touches[0].pageY 当前位置
-        _transitionHeight = e.touches[0].pageY - _startPos; // 记录差值
+    /* ========== 配置 ========== */
+    var PAGE_SIZE = 10;          // 每页条数
+    var TOTAL = 55;              // mock 数据总量
+    var PULL_THRESHOLD = 60;     // 触发刷新的下拉距离
+    var MAX_PULL = 100;          // 阻尼后的最大下拉距离
+    var BOTTOM_THRESHOLD = 80;   // 距底部多少 px 触发上拉加载
 
-        if (_transitionHeight > 0 && _transitionHeight < 60) { 
-            _refreshText.innerText = '下拉刷新'; 
-            _element.style.transform = 'translateY('+_transitionHeight+'px)';
+    /* ========== 分页状态 ========== */
+    var page = 1;                // 下一次要请求的页码
+    var isLoading = false;       // 请求防重入
+    var hasMore = true;          // 是否还有更多
+    var isRefreshing = false;    // 是否正在下拉刷新
 
-            if (_transitionHeight > 55) {
-                _refreshText.innerText = '释放更新';
-            }
-        }                
-    }, false);
-    _element.addEventListener('touchend', function(e) {
-      _element.style.transition = 'transform 0.5s ease 1s';
-      _element.style.transform = 'translateY(0px)';
-      if (_transitionHeight > 55) {
-        _refreshText.innerText = '更新中...';
+    /* ========== 下拉手势状态 ==========
+       模式在一次手势内只裁决一次：idle-top -> pull | scroll。
+       一旦上推交还给原生滚动（scroll），本次 touchend 前不再重新下拉，
+       避免“上下来回拖”时 pullDist 跳变导致指示器闪烁 */
+    var gestureMode = ''; // '' | idle-top | pull | scroll
+    var startY = 0;
+    var lastY = 0;
+    var pullDist = 0;
+    var indicatorState = ''; // 缓存指示器状态，只在变化时操作 DOM
 
+    /* ========== Mock 分页接口（替换成真实 fetch 即可） ========== */
+    function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    function fetchPage(p) {
+      return delay(800).then(function () {
+        var start = (p - 1) * PAGE_SIZE;
+        var count = Math.max(0, Math.min(PAGE_SIZE, TOTAL - start));
+        var rows = [];
+        for (var i = 0; i < count; i++) rows.push('消息内容 ' + (start + i + 1));
+        return { rows: rows, total: TOTAL };
+      });
+    }
+
+    /* ========== 渲染 ========== */
+    function renderRows(rows, append, requestPage) {
+      var html = rows.map(function (text, i) {
+        var no = (requestPage - 1) * PAGE_SIZE + i + 1; // 全局连续序号
+        return '<li><span>' + text + '</span><span class="no">#' + no + '</span></li>';
+      }).join('');
+      if (append) listEl.insertAdjacentHTML('beforeend', html);
+      else listEl.innerHTML = html;
+    }
+
+    function setLoadStatus() {
+      if (isLoading) loadStatus.textContent = '加载中...';
+      else if (hasMore) loadStatus.textContent = '上拉加载更多';
+      else loadStatus.textContent = '没有更多了';
+    }
+
+    // pull | ready | refreshing | success
+    function setIndicator(state) {
+      if (state === indicatorState) return; // 状态未变，不重复操作 DOM
+      indicatorState = state;
+      spinner.hidden = state !== 'refreshing';
+      pullIcon.hidden = state === 'refreshing';
+      pullIcon.classList.toggle('rotate', state === 'ready');
+      if (state === 'pull')         { pullIcon.textContent = '↓'; pullText.textContent = '下拉刷新'; }
+      else if (state === 'ready')   { pullIcon.textContent = '↓'; pullText.textContent = '释放立即刷新'; }
+      else if (state === 'refreshing') { pullText.textContent = '正在刷新...'; }
+      else if (state === 'success') { pullIcon.textContent = '✓'; pullText.textContent = '刷新成功'; }
+    }
+
+    /* 内容不足一屏时自动续载，直到可滚动或没有更多 */
+    function ensureScrollable() {
+      if (!isRefreshing && hasMore && wrapper.scrollHeight - 50 <= wrapper.clientHeight) {
+        loadMore();
       }
-      setTimeout(() => {
-        _refreshText.innerText = '';
-      }, 1000);
-      // todo...
+    }
 
-  }, false);
+    /* ========== 首次加载 ========== */
+    async function loadInitial() {
+      isLoading = true;
+      setLoadStatus();
+      try {
+        var res = await fetchPage(1);
+        renderRows(res.rows, false, 1);
+        hasMore = PAGE_SIZE < res.total;
+        page = 2;
+      } finally {
+        isLoading = false;
+        setLoadStatus();
+        ensureScrollable();
+      }
+    }
+
+    /* ========== 上拉加载更多 ========== */
+    async function loadMore() {
+      if (isLoading || !hasMore || isRefreshing) return;
+      isLoading = true;
+      setLoadStatus();
+      var p = page;
+      try {
+        var res = await fetchPage(p);
+        renderRows(res.rows, true, p);
+        hasMore = p * PAGE_SIZE < res.total;
+        page = p + 1;
+      } finally {
+        isLoading = false;
+        setLoadStatus();
+        ensureScrollable();
+      }
+    }
+
+    /* ========== 下拉刷新（手势状态机） ========== */
+    function onGestureStart(y) {
+      if (isRefreshing) { gestureMode = ''; return; }
+      startY = lastY = y;
+      content.style.transition = 'none';
+      // 若上一次回弹动画还没结束，从当前视觉位置续接，避免瞬间跳变
+      var m = /translateY\(([\d.]+)px\)/.exec(content.style.transform);
+      pullDist = m ? parseFloat(m[1]) : 0;
+      gestureMode = wrapper.scrollTop <= 0 ? 'idle-top' : 'scroll';
+    }
+
+    function onGestureMove(y, e) {
+      if (!gestureMode || gestureMode === 'scroll') return; // 已交还给原生滚动，本手势不再拦截
+
+      var d = y - lastY; // 增量位移（不依赖 startY，反向再拖不会跳变）
+      lastY = y;
+
+      if (gestureMode === 'idle-top') {
+        if (d > 0) gestureMode = 'pull';          // 手指向下：进入下拉
+        else if (d < 0) { gestureMode = 'scroll'; return; } // 手指向上：裁决为原生滚动
+        else return;
+      }
+
+      // gestureMode === 'pull'
+      if (pullDist > 0 || d > 0) {
+        if (e && e.cancelable) e.preventDefault(); // 拦截原生滚动/浏览器整页下拉刷新
+      }
+      if (d > 0) {
+        // 越接近 MAX_PULL 阻尼越大
+        pullDist = Math.min(MAX_PULL, pullDist + d * (1 - pullDist / MAX_PULL) * 0.8);
+      } else {
+        pullDist = Math.max(0, pullDist + d);      // 上推跟随收回
+        if (pullDist === 0) gestureMode = 'scroll'; // 收完即交还原生滚动，本手势不再触发下拉
+      }
+      content.style.transform = 'translateY(' + pullDist + 'px)';
+      setIndicator(pullDist >= PULL_THRESHOLD ? 'ready' : 'pull');
+    }
+
+    function onGestureEnd() {
+      if (gestureMode !== 'pull') { gestureMode = ''; return; }
+      gestureMode = '';
+      content.style.transition = 'transform .3s ease';
+      if (pullDist >= PULL_THRESHOLD) {
+        pullDist = indicator.offsetHeight; // 60px：刚好停在指示器高度
+        content.style.transform = 'translateY(' + pullDist + 'px)';
+        doRefresh();
+      } else {
+        pullDist = 0;
+        content.style.transform = 'translateY(0)';
+        setIndicator('pull');
+      }
+    }
+
+    async function doRefresh() {
+      isRefreshing = true;
+      setIndicator('refreshing');
+      // 若恰好有上拉请求在飞，等它结束再刷新，避免状态错乱
+      while (isLoading) { await delay(50); }
+      isLoading = true;
+      try {
+        var res = await fetchPage(1);
+        renderRows(res.rows, false, 1);
+        hasMore = PAGE_SIZE < res.total;
+        page = 2;
+        wrapper.scrollTop = 0;
+      } finally {
+        isLoading = false;
+        setLoadStatus();
+        finishRefresh();
+      }
+    }
+
+    function finishRefresh() {
+      setIndicator('success');
+      setTimeout(function () {
+        content.style.transition = 'transform .3s ease';
+        content.style.transform = 'translateY(0)';
+        pullDist = 0;
+        isRefreshing = false;
+        setTimeout(function () { setIndicator('pull'); }, 300);
+        ensureScrollable();
+      }, 400);
+    }
+
+    /* ========== 事件绑定 ========== */
+    // touch（真机）：move 需要 preventDefault，必须 passive:false
+    wrapper.addEventListener('touchstart', function (e) {
+      onGestureStart(e.touches[0].clientY); // 注意传 clientY，不能直接把函数当监听器
+    }, { passive: true });
+    wrapper.addEventListener('touchmove', function (e) {
+      onGestureMove(e.touches[0].clientY, e);
+    }, { passive: false });
+    wrapper.addEventListener('touchend', onGestureEnd, { passive: true });
+    wrapper.addEventListener('touchcancel', onGestureEnd, { passive: true });
+
+    // mouse（桌面浏览器调试用）
+    wrapper.addEventListener('mousedown', function (e) {
+      onGestureStart(e.clientY);
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (gestureMode) onGestureMove(e.clientY, null);
+    });
+    window.addEventListener('mouseup', onGestureEnd);
+
+    // 上拉触底：rAF 节流
+    var ticking = false;
+    wrapper.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        if (wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - BOTTOM_THRESHOLD) {
+          loadMore();
+        }
+        ticking = false;
+      });
+    }, { passive: true });
+
+    /* ========== 启动 ========== */
+    loadInitial();
+  })();
   </script>
 </body>
 </html>
