@@ -12,7 +12,7 @@
 
     const oldArrProto = Array.prototype;
     const arrProto = Object.create(oldArrProto);
-    ['push', 'slice', 'splice', 'pop', 'shift', 'unshift'].forEach(methodName => {
+    ['push', 'sort', 'splice', 'pop', 'shift', 'unshift', 'reverse'].forEach(methodName => {
       arrProto[methodName] = function() {
         viewUpdate();
         oldArrProto[methodName].call(this, ...arguments);
