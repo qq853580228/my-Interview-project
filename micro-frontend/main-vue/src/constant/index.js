@@ -1,0 +1,6 @@
+export const MICRO_APP_NAME = 'main-vue'
+export const SUB_APP_NAME_VUE = 'vue-sub'
+export const SUB_APP_NAME_REACT = 'react-sub'
+export const SUB_APP_NAME_VUE_PATH = '/vue-sub'
+export const SUB_APP_NAME_REACT_PATH = '/react-sub'
+export const MICRO_APP_CONTAINER = '#micro-container'
