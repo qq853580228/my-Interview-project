@@ -7,8 +7,8 @@
       <a-button v-if="hasPerm(PERM.PRODUCT_SHELF)" danger @click="emitLowStockAlarm">
         上报低库存告警（演示场景4）
       </a-button>
-      <a-typography-text type="secondary">权限：{{ globalStore.permissions.join(', ') }}</a-typography-text>
     </a-space>
+    <p>权限：{{ globalStore.permissions.join(', ') }}</p>
 
     <!-- 事件日志区：显示收到的订单结算事件（联动场景3） -->
     <a-card v-if="eventLog.length > 0" size="small" title="事件日志（最近 10 条）" class="event-log">
@@ -23,6 +23,7 @@
       row-key="id"
       size="middle"
       :columns="columns"
+      :scroll="{ x: true }"
       :data-source="products"
       :pagination="false"
     >

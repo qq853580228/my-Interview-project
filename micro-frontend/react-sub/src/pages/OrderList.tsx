@@ -113,6 +113,7 @@ export default function OrderList() {
         size="middle"
         columns={columns}
         dataSource={orders}
+        scroll={{ x: true }}
         pagination={false}
         locale={{ emptyText: <Empty description="暂无订单" /> }}
       />

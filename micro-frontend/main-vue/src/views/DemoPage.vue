@@ -95,7 +95,7 @@
     </a-card>
 
     <a-card title="qiankun 能力核对清单（代码位置见 README）" size="small" class="section">
-      <a-table size="small" :columns="capColumns" :data-source="capRows" :pagination="false" row-key="cap" />
+      <a-table size="small" :columns="capColumns" :data-source="capRows" :scroll="{ x: true}" :pagination="false" row-key="cap" />
     </a-card>
 
     <a-card title="常见追问速答" size="small" class="section">

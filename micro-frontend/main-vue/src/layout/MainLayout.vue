@@ -1,8 +1,19 @@
 <template>
   <a-layout class="layout">
-    <!-- 侧边菜单导航 -->
-    <a-layout-sider theme="dark" width="220">
-      <div class="logo">微前端运营管控平台</div>
+    <!-- 移动端遮罩层 -->
+    <div v-if="isMobile" class="sider-overlay" :class="{ 'overlay-show': !isCollapsed }" @click="toggleSider"></div>
+    <a-layout-sider
+      theme="dark"
+      :width="siderWidth"
+      :collapsed="isCollapsed && !isMobile"
+      :trigger="null"
+      :class="{ 'sider-mobile': isMobile }"
+      v-show="!isMobile || !isCollapsed"
+    >
+      <div class="logo">
+        <img v-if="isCollapsed && !isMobile" :src="logoIcon" class="logo-icon" />
+        <span v-if="!isCollapsed || isMobile">微前端运营管控平台</span>
+      </div>
       <a-menu
         theme="dark"
         mode="inline"
@@ -11,18 +22,18 @@
       >
         <a-menu-item key="/demo">
           <ReadOutlined />
-          <span>演示说明</span>
+          <span v-show="!(isCollapsed && !isMobile)">演示说明</span>
         </a-menu-item>
         <a-menu-item v-if="hasPerm(PERM.PRODUCT_VIEW)" :key="SUB_APP_NAME_VUE_PATH + '/products'">
           <ShoppingOutlined />
-          <span>商品管理 <a-tag color="blue">vue-sub</a-tag></span>
+          <span v-show="!(isCollapsed && !isMobile)">商品管理 <a-tag color="blue">vue-sub</a-tag></span>
         </a-menu-item>
         <a-menu-item v-if="hasPerm(PERM.ORDER_VIEW)" :key="SUB_APP_NAME_REACT_PATH + '/orders'">
           <FileTextOutlined />
-          <span>订单管理 <a-tag color="cyan">react-sub</a-tag></span>
+          <span v-show="!(isCollapsed && !isMobile)">订单管理 <a-tag color="cyan">react-sub</a-tag></span>
         </a-menu-item>
       </a-menu>
-      <div class="sider-footer">
+      <div class="sider-footer" v-show="!isCollapsed && !isMobile">
         <div>当前角色：{{ user ? ROLE_LABELS[user.role] : '-' }}</div>
         <div class="perm-list">权限码：{{ permissions.join(', ') || '无' }}</div>
       </div>
@@ -31,22 +42,33 @@
     <a-layout>
       <!-- 顶栏：用户信息 / 角色切换 / 消息通知中心 -->
       <a-layout-header class="header">
-        <div class="header-title">统一运营管控平台（基座 main-vue）</div>
-        <a-space size="middle">
-          <!-- 演示场景1：直接切换角色触发权限变更事件下发 -->
-          <a-space size="small">
-            <span class="role-label">切换角色：</span>
-            <a-select
-              size="small"
-              style="width: 230px"
-              :value="user?.role"
-              :options="ROLE_OPTIONS"
-              @change="onSwitchRole"
-            />
-          </a-space>
+        <div class="header-left">
+          <MenuUnfoldOutlined
+            v-if="!isMobile"
+            class="menu-trigger-desktop"
+            :class="{ rotated: isCollapsed }"
+            @click="toggleSider"
+          />
+          <span class="header-title">统一运营管控平台</span>
+          <span class="header-title-mobile">运营管控</span>
+          <MenuFoldOutlined
+            v-if="isMobile"
+            class="menu-trigger-mobile"
+            @click="toggleSider"
+          />
+        </div>
+        <a-space size="small" class="header-actions">
+          <span class="role-label">切换角色：</span>
+          <a-select
+            size="small"
+            style="width: 180px"
+            :value="user?.role"
+            :options="ROLE_OPTIONS"
+            @change="onSwitchRole"
+          />
           <a-tag v-if="user">{{ user.nickname }}（{{ user.role }}）</a-tag>
 
-          <!-- 消息通知中心：联动场景4 的红点在这里（Badge 数字 + Popover 面板） -->
+          <!-- 消息通知中心：联动场景 4 的红点在这里（Badge 数字 + Popover 面板） -->
           <a-popover trigger="click" placement="bottomRight">
             <template #content>
               <div style="width: 360px">
@@ -107,18 +129,21 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, ref, onMounted, onUnmounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import {
     BellOutlined,
     FileTextOutlined,
     ReadOutlined,
     ShoppingOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
   } from '@ant-design/icons-vue'
   import { userStore, permissions, hasPerm, switchRole, logout } from '../store/user'
   import { notificationStore, unreadCount, markAllRead, clearAll } from '../store/notification'
   import { PERM, ROLE_LABELS, ROLE_OPTIONS, type Role } from '../shared/contract'
   import { MICRO_APP_CONTAINER, SUB_APP_NAME_VUE_PATH, SUB_APP_NAME_REACT_PATH } from '../constant'
+  import logoIcon from '../assets/vue.svg'
 
   const route = useRoute()
   const router = useRouter()
@@ -126,6 +151,44 @@
 
   // MICRO_APP_CONTAINER 是 CSS 选择器 '#micro-container'，模板 id 属性只需去掉 '#'
   const containerId = MICRO_APP_CONTAINER.replace(/^#/, '')
+
+  // 侧边栏状态
+  const isCollapsed = ref(false)
+  const isMobile = ref(false)
+  const SIDER_WIDTH = 220
+  const COLLAPSED_WIDTH = 80
+
+  // 桌面端：展开 220px，收起 80px
+  // 移动端：完全由 v-show 控制显示/隐藏
+  const siderWidth = computed(() => {
+    if (isCollapsed.value && !isMobile.value) return COLLAPSED_WIDTH
+    return SIDER_WIDTH
+  })
+
+  // 检测屏幕尺寸并控制侧边栏行为（仅在初始化或断点跨越时生效）
+  const checkMobile = () => {
+    const prevIsMobile = isMobile.value
+    isMobile.value = window.innerWidth <= 768
+
+    // 只在跨断点时改变折叠状态
+    if (prevIsMobile && !isMobile.value) {
+      // 从移动端切换到桌面端：展开侧边栏
+      isCollapsed.value = false
+    } else if (!prevIsMobile && isMobile.value) {
+      // 从桌面端切换到移动端：收起侧边栏
+      isCollapsed.value = true
+    }
+    // 同一断点内不改变折叠状态
+  }
+
+  const handleResize = () => {
+    checkMobile()
+  }
+
+  // 切换侧边栏
+  function toggleSider(): void {
+    isCollapsed.value = !isCollapsed.value
+  }
 
   // 菜单高亮与基座路由联动：子应用内部跳转时保持对应菜单项选中
   const selectedKeys = computed(() => {
@@ -144,6 +207,10 @@
     // 【修复】qiankun 沙箱内 location 可能被 React 子应用的 useNavigate 污染，
     // 直接用 router.push 可能触发 "undefined/" URL 错误，
     history.pushState(null, info.key, info.key)
+    // 移动端点击菜单后自动收起侧边栏
+    if (isMobile.value) {
+      isCollapsed.value = true
+    }
   }
 
   function onSwitchRole(role: Role): void {
@@ -158,18 +225,145 @@
   function formatTime(t: number): string {
     return new Date(t).toLocaleTimeString('zh-CN', { hour12: false })
   }
+
+  // 生命周期
+  onMounted(() => {
+    checkMobile()
+    window.addEventListener('resize', handleResize)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', handleResize)
+  })
 </script>
 
 <style scoped>
   .layout {
     height: 100vh;
   }
+
+  /* Logo 区域 */
   .logo {
     padding: 16px;
     color: #fff;
     font-weight: bold;
     font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 52px;
+    gap: 8px;
   }
+
+  .logo span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Vue Logo 图标 */
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  /* 收起状态下的 logo - 只显示图标 */
+  :deep(.ant-layout-sider-collapsed) .logo {
+    justify-content: center;
+    padding: 16px 0;
+  }
+
+  :deep(.ant-layout-sider-collapsed) .logo span {
+    display: none;
+  }
+
+  :deep(.ant-layout-sider-collapsed) .logo-icon {
+    display: block;
+  }
+
+  /* 顶栏左侧布局（菜单按钮 + 标题） */
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .menu-trigger-desktop,
+  .menu-trigger-mobile {
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+  }
+
+  .menu-trigger-desktop:hover,
+  .menu-trigger-mobile:hover {
+    color: #1890ff;
+  }
+
+  .menu-trigger-desktop.rotated {
+    transform: rotate(180deg);
+  }
+
+  /* 移动端遮罩层 - z-index 低于侧边栏但高于内容 */
+  .sider-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .sider-overlay.overlay-show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 移动端侧边栏样式 */
+  .sider-mobile {
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* 移动端布局：侧边栏完全脱离文档流 */
+  @media screen and (max-width: 768px) {
+    :deep(.ant-layout-sider:not(.ant-layout-sider-collapsed)) {
+      position: fixed !important;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 220px !important;
+      z-index: 100;
+      margin: 0 !important;
+      box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 移动端收起状态 - 完全隐藏 */
+    :deep(.ant-layout-sider.sider-mobile.collapsed) {
+      display: none !important;
+    }
+
+    :deep(.ant-layout-sider) {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  /* 桌面端侧边栏收起动画 */
+  @media screen and (min-width: 769px) {
+    :deep(.ant-layout-sider-collapsed) {
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
   .sider-footer {
     position: absolute;
     bottom: 0;
@@ -193,10 +387,45 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid #f0f0f0;
+    overflow: visible;
   }
+
   .header-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
+    /* 长标题省略 */
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    order: 1;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .header-title-mobile {
+    font-size: 14px;
+    font-weight: 600;
+    display: none;
+  }
+
+  .header-actions {
+    justify-content: flex-end;
+  }
+
+  .header-actions :deep(.ant-space) {
+    flex-wrap: wrap;
+  }
+
+  :deep(.ant-badge) {
+    flex-shrink: 0;
+    margin-left: 4px;
+    order: 3;
+  }
+
+  :deep(.ant-space-item) {
+    flex-shrink: 0;
+    order: 2;
   }
   .role-label {
     font-size: 13px;
@@ -232,82 +461,95 @@
 
   /* 平板及以下设备（768px）*/
   @media screen and (max-width: 768px) {
-    :deep(.ant-layout-sider) {
-      width: 60px !important;
-      min-width: 60px !important;
-    }
-
-    .logo {
-      font-size: 0;
+    .header {
+      padding: 0 8px;
+      height: 48px;
+      line-height: 48px;
       overflow: hidden;
     }
 
-    :deep(.ant-menu-inline) {
-      --antd-menu-item-height: 52px;
+    .header-left {
+      gap: 4px;
+      flex-shrink: 0;
+      min-width: 0;
     }
 
-    :deep(.ant-menu-item),
-    :deep(.ant-menu-submenu-title) {
-      justify-content: center;
-      padding: 0 !important;
-    }
-
-    :deep(.ant-menu-item span),
-    :deep(.ant-menu-item .ant-tag),
-    :deep(.ant-menu-submenu-title span) {
+    .menu-trigger-desktop {
       display: none;
     }
 
-    :deep(.ant-menu-item .anticon),
-    :deep(.ant-menu-submenu-title .anticon) {
-      margin-right: 0 !important;
+    .menu-trigger-mobile {
+      display: inline-block;
       font-size: 18px;
-    }
-
-    .sider-footer {
-      display: none;
-    }
-
-    .header {
-      padding: 0 12px;
-      height: 48px;
-      line-height: 48px;
+      margin-right: 2px;
+      flex-shrink: 0;
     }
 
     .header-title {
+      font-size: 13px;
+      max-width: 80px;
+      order: 1;
+      display: none !important;
+      flex-shrink: 0;
+      min-width: 0;
+    }
+
+    .header-title-mobile {
       font-size: 14px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 50%;
+      order: 1;
+      display: block !important;
+      flex-shrink: 0;
+      max-width: 80px;
+      min-width: 0;
     }
 
-    :deep(.ant-select-selector) {
-      min-width: unset;
+    .header-actions {
+      order: 2;
+      flex: 1;
+      justify-content: flex-end;
+      gap: 4px !important;
+      min-width: 0;
+    }
+
+    .header-actions :deep(.ant-space-item) {
+      flex-shrink: 0;
     }
 
     .role-label {
       display: none;
     }
 
-    :deep(.ant-btn) {
-      padding: 4px 8px;
+    :deep(.ant-select) {
+      max-width: 120px;
+    }
+
+    :deep(.ant-select-selector) {
+      min-width: unset !important;
+      padding: 2px 6px !important;
       font-size: 12px;
+      height: 28px !important;
     }
 
-    :deep(.ant-popover-inner) {
-      max-width: 90vw;
-    }
-  }
-
-  /* 手机设备（480px 及以下）*/
-  @media screen and (max-width: 480px) {
-    :deep(.ant-layout-header) {
-      padding: 0 8px;
+    :deep(.ant-tag) {
+      margin-left: 0;
+      padding: 1px 4px;
+      font-size: 11px;
+      height: 20px;
+      line-height: 18px;
     }
 
-    .header-title {
-      font-size: 13px;
+    :deep(.ant-btn) {
+      padding: 2px 6px !important;
+      font-size: 11px;
+      min-height: 28px !important;
+      height: 28px !important;
+    }
+
+    :deep(.ant-badge) {
+      margin-left: 0;
     }
 
     :deep(.ant-badge-count) {
@@ -317,13 +559,37 @@
       line-height: 16px;
     }
 
+    :deep(.ant-popover-inner) {
+      max-width: 85vw;
+    }
+
+    :deep(.ant-popover-inner-content) {
+      padding: 8px;
+    }
+
     :deep(.ant-list-item) {
-      padding: 12px 8px;
+      padding: 8px 4px;
     }
 
     .notice-msg,
     .notice-time {
       font-size: 11px;
+    }
+  }
+
+  /* 手机设备（480px 及以下）*/
+  @media screen and (max-width: 480px) {
+    .header {
+      padding: 0 4px;
+    }
+
+    .header-title-mobile {
+      font-size: 13px;
+      max-width: 60px;
+    }
+
+    :deep(.ant-select) {
+      max-width: 80px;
     }
   }
 </style>
